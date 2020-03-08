@@ -274,10 +274,17 @@ class CFI {
         break;
       }
     }
-
+    var nodeIndex;
+    
     for(i=startFrom; i < subparts.length; i++) {
       subpart = subparts[i];
-      node = node.childNodes[subpart.nodeIndex - 1];
+      nodeIndex = subpart.nodeIndex - 1;
+      if(nodeIndex < 0) {
+        nodeIndex = 0;
+      } else if(nodeIndex > node.childNodes.length - 1) {
+        nodeIndex = node.childNodes.length - 1;
+      }
+      node = node.childNodes[nodeIndex];
       
       if(!node) throw new Error("CFI did not match any nodes in this document");
     }
