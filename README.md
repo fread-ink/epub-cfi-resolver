@@ -15,6 +15,8 @@ npm install epub-cfi-resolver
 Remember to unescape the URI first, then:
 
 ```
+var CFI = require('CFI');
+
 var cfi = new CFI('epubcfi(/1/2!/1/2/3:4'); // parsing
 console.log(cfi.parts); // print parsed data
 ```
