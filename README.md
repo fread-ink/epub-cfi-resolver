@@ -40,7 +40,7 @@ You can then use e.g. `window.scrollTo()` or some other method to access show th
 
 A CFI, or Canonical Fragment Identifier, is like a more complicated `#anchor` as used in HTML `href=` attributes. Think of them as ebook bookmarks.
 
-CFIs allow specifying a precise location inside any XML/XHTML/HTML document by specifying how to traverse the document tree. E.g:
+CFIs allow specifying a precise location inside any XML/XHTML/HTML document by specifying how to traverse the document tree, e.g:
 
 ```
 epubcfi(/6/7:42)
@@ -60,7 +60,7 @@ Additionally, CFIs can traverse multiple documents, e.g:
 epubcfi(/1/2!/6[foo]/7:42[don't panic])
 ```
 
-The `!` marks the beginning of a new document so this CFI tells us to go to the 2nd child node of the 1st child node of the current document, then look for an attribute in that node that references another document (e.g. `href=`) and continue resolvinf the rest of the CFI in the references document.
+The `!` marks the beginning of a new document so this CFI tells us to go to the 2nd child node of the 1st child node of the current document, then look for an attribute in that node that references another document (e.g. `href=`) and continue resolving the rest of the CFI in the referenced document.
 
 # License and copyright
 
