@@ -6,6 +6,12 @@ This is meant to run in the browser but should work anywhere `DOMParser` is pres
 
 # Usage
 
+To install:
+
+```
+npm install epub-cfi-resolver
+```
+
 Remember to unescape the URI first, then:
 
 ```
@@ -35,6 +41,16 @@ var bookmark = cfi.resolve(doc2);
 ```
 
 You can then use e.g. `window.scrollTo()` or some other method to access show the location referenced by the CFI.
+
+# Example
+
+To build the example:
+
+``
+npm run build
+```
+
+Then open `example/example.html` in a browser.
 
 # Supported features
 
