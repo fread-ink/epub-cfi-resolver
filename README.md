@@ -117,9 +117,15 @@ Supported:
 
 Not supported:
 
+* Before first / after last locations
 * Simple Ranges
+* Sorting CFIs
+
+It is possible to specify CFIs as referencing a location immediately before or after an element, rather than directly on the element. This is not yet fully supported.
 
 Simple Ranges are not fully supported. They are parsed as the beginning location of the range. That is, for triples like <prefix>,<range-start>,<range-end> they are parsed as <prefix><range-start>.
+
+Sorting CFIs, which is the same as computing their relative locations, is defined by the official spec but it does not seem like a terribly useful feature. When do you ever have the need to sort a set of links by how deeply into a target document they link?
 
 ## Resolver
 
@@ -172,14 +178,14 @@ Pros of using this project over readium-cfi-js:
 
 Pros of using readium-cfi-js over this project:
 
-* Supports all features fully vs. Simply Ranges not fully supported
+* Supports all features fully vs. supports most features
 * Older more mature project vs. newer unproven codebase
 
 Other differences, this project vs. readium-cfi-js:
 
 * AGPLv3 vs. BSD-3-Clause
 * Hand-written state machine vs. uses a parser generator (pegjs) vs.
-* Not so strict parsing vs. strict parsing
+* Not so strict parsing/resolving vs. strict parsing/resolving
 
 # License and copyright
 
