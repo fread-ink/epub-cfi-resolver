@@ -1,7 +1,5 @@
 A simple parser and resolver for the [EPUB-CFI](http://idpf.org/epub/linking/cfi/epub-cfi.html) format.
 
-This is a work in progress. Not quite usable yet.
-
 This is meant to run in the browser but should work anywhere `DOMParser` is present.
 
 # Usage
@@ -112,7 +110,7 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 * Implement simple ranges
 * Implement "before first" and "after last" node locations
-* Unit tests
+* More unit tests
 
 # License and copyright
 

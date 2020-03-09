@@ -5,7 +5,7 @@ var docs = require('../test_data/from_spec.js');
 
 var testCFI2 = "epubcfi(/6/4[chap01ref]!/4[body01]/10[para05]/3:9[;s=a])";
 
-var cfi = new CFI(ex6);
+var cfi = new CFI(testCFI2);
 for(let part of cfi.parts) {
   console.log("part:");
   for(let subpart of part) {
