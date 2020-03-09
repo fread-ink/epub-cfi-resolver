@@ -30,6 +30,43 @@ var tests = [
       ]
     ]
   }, {
+    cfi: "epubcfi(/6/14[cha!/p05ref]!/4[bo!/dy01]/10/2/1[foo]:5:3[don't!/ panic;s=b]~3.4@1:2)",
+    parsed: [
+      [
+        {
+          "nodeIndex": 6
+        },
+        {
+          "nodeIndex": 14,
+          "nodeID": "cha!/p05ref"
+        }
+      ],
+      [
+        {
+          "nodeIndex": 4,
+          "nodeID": "bo!/dy01"
+        },
+        {
+          "nodeIndex": 10
+        },
+        {
+          "nodeIndex": 2
+        },
+        {
+          "nodeIndex": 1,
+          "nodeID": "foo",
+          "offset": 3,
+          "location": "don't!/ panic",
+          "sideBias": "before",
+          "temporal": 3.4,
+          "spatial": {
+            "from": 1,
+            "to": 2
+          }
+        }
+      ]
+    ]
+  }, {
     cfi: "epubcfi(/6/4[chap01ref]!/4[body01]/10[para05]/3:5)",
     parsed: [
       [

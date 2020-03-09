@@ -42,6 +42,46 @@ var bookmark = cfi.resolve(doc2);
 
 You can then use e.g. `window.scrollTo()` or some other method to access show the location referenced by the CFI.
 
+## Parser output
+
+Given this CFI:
+
+```
+epubcfi(/1/2[node-id]!/3/4:5[text;s=b]~3.14@4:2)
+```
+
+The parser will output:
+
+```
+[
+  [
+    {
+      "nodeIndex": 1
+    },
+    {
+      "nodeIndex": 2,
+      "nodeID": "node-id"
+    }
+  ],
+  [
+    {
+      "nodeIndex": 3
+    },
+    {
+      "nodeIndex": 4,
+      "offset": 5,
+      "location": "text",
+      "sideBias": "before",
+      "temporal": 3.14,
+      "spatial": {
+        "from": 4,
+        "to": 2
+      }
+    }
+  ]
+]
+```
+
 # Example
 
 To build the example:
@@ -51,6 +91,10 @@ npm run build
 ```
 
 Then open `example/example.html` in a browser.
+
+# Unit tests
+
+Run using: `npm run test`
 
 # Supported features
 
