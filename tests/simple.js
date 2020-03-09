@@ -30,6 +30,81 @@ var tests = [
       ]
     ]
   }, {
+    cfi: "epubcfi(/1/2:3[pre,post])",
+    parsed: [
+      [
+        {
+          "nodeIndex": 1
+        },
+        {
+          "nodeIndex": 2,
+          "offset": 3,
+          "textLocationAssertion": {
+            "pre": "pre",
+            "post": "post"
+          }
+        }
+      ]
+    ]
+  }, {
+    cfi: "epubcfi(/1/2:3[,post])",
+    parsed: [
+      [
+        {
+          "nodeIndex": 1
+        },
+        {
+          "nodeIndex": 2,
+          "offset": 3,
+          "textLocationAssertion": {
+            "post": "post"
+          }
+        }
+      ]
+    ]
+  }, {
+    cfi: "epubcfi(/1/2:3[pre,])",
+    parsed: [
+      [
+        {
+          "nodeIndex": 1
+        },
+        {
+          "nodeIndex": 2,
+          "offset": 3,
+          "textLocationAssertion": {
+            "pre": "pre"
+          }
+        }
+      ]
+    ]
+  }, {
+    cfi: "epubcfi(/1[^^^]])",
+    parsed: [
+      [
+        {
+          "nodeIndex": 1,
+          "nodeID": "^]"
+        }
+      ]
+    ]
+  }, {
+    cfi: "epubcfi(/1/2:3[,post])",
+    parsed: [
+      [
+        {
+          "nodeIndex": 1
+        },
+        {
+          "nodeIndex": 2,
+          "offset": 3,
+          "textLocationAssertion": {
+            "post": "post"
+          }
+        }
+      ]
+    ]
+  }, {
     cfi: "epubcfi(/6/14[cha!/p05ref]!/4[bo!/dy01]/10/2/1[foo]:5:3[don't!/ panic;s=b]~3.4@1:2)",
     parsed: [
       [
@@ -56,7 +131,7 @@ var tests = [
           "nodeIndex": 1,
           "nodeID": "foo",
           "offset": 3,
-          "location": "don't!/ panic",
+          "textLocationAssertion": "don't!/ panic",
           "sideBias": "before",
           "temporal": 3.4,
           "spatial": {
@@ -118,7 +193,6 @@ for(let test of tests) {
   if(test.resolvedURI) testCount++;
   if(test.resolved) testCount++;
 }
-console.log("COUNT:", testCount);
   
 const opfDOM = parseDOM(docs.opf, 'application/xhtml+xml');
 const htmlDOM = parseDOM(docs.html, 'application/xhtml+xml');

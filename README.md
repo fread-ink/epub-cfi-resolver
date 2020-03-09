@@ -47,7 +47,7 @@ You can then use e.g. `bookmark.node.scrollTo()` or some other method to show th
 Given this CFI:
 
 ```
-epubcfi(/1/2[node-id]!/3/4:5[text;s=b]~3.14@4:2)
+epubcfi(/1/2[node-id]!/3/4:5[pre,post;s=b]~3.14@4:2)
 ```
 
 The parser will output:
@@ -70,7 +70,10 @@ The parser will output:
     {
       "nodeIndex": 4,
       "offset": 5,
-      "location": "text",
+      "textLocationAssertion": {
+        "pre": "pre",
+        "post": "post"
+      }
       "sideBias": "before",
       "temporal": 3.14,
       "spatial": {
@@ -116,7 +119,7 @@ Not supported:
 
 * Simple Ranges
 
-Simple Ranges are not fully supported. They are parsed as the beginning location of the range. That is, for the triple <prefix>,<range-start>,<range-end> it is parsed as <prefix><range-start>.
+Simple Ranges are not fully supported. They are parsed as the beginning location of the range. That is, for triples like <prefix>,<range-start>,<range-end> they are parsed as <prefix><range-start>.
 
 ## Resolver
 
@@ -126,7 +129,7 @@ If a node is specified using child node index 0 (e.g. `epubcfi(/0)`) or a number
 
 # About EPUB-CFI
 
-A CFI, or Canonical Fragment Identifier, is like a more complicated `#anchor` as used in HTML `href=` attributes. Think of them as ebook bookmarks.
+A [CFI](http://idpf.org/epub/linking/cfi/epub-cfi.html), or Canonical Fragment Identifier, is like a more complicated `#anchor` as used in HTML `href=` attributes. Think of them as ebook bookmarks.
 
 CFIs allow specifying a precise location inside any XML/XHTML/HTML document by specifying how to traverse the document tree, e.g:
 
@@ -154,7 +157,29 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 * Implement proper parsing of Simple Ranges
 * Implement proper parsing of "before first" and "after last" node locations
-* More unit tests
+* Unit tests for bad data / stuff that should fail
+
+# Other similar projects
+
+## [readium-cfi-js](https://github.com/readium/readium-cfi-js)
+
+Pros of using this project over readium-cfi-js:
+
+* ~10 kB vs. ~400 kB dist file
+* Documented usage and example code vs. no documentation on usage
+* No dependencies vs. depends on jquery and lodash
+* Unit tests run in node.js vs. tests require browser
+
+Pros of using readium-cfi-js over this project:
+
+* Supports all features fully vs. Simply Ranges not fully supported
+* Older more mature project vs. newer unproven codebase
+
+Other differences, this project vs. readium-cfi-js:
+
+* BSD-3-Clause vs. AGPLv3
+* Hand-written state machine vs. uses a parser generator (pegjs) vs.
+* Not so strict parsing vs. strict parsing
 
 # License and copyright
 

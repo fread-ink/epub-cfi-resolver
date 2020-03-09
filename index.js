@@ -58,11 +58,19 @@ class CFI {
     if(!loc) return;
     const m = loc.trim().match(/^(.*);s=([ba])$/);
     if(!m || m.length < 3) {
-      o.location = loc;
+      if(typeof o.textLocationAssertion === 'object') {
+        o.textLocationAssertion.post = loc;
+      } else {
+        o.textLocationAssertion = loc;
+      }
       return;
     }
     if(m[1]) {
-      o.location = m[1];
+      if(typeof o.textLocationAssertion === 'object') {
+        o.textLocationAssertion.post = m[1];
+      } else {
+        o.textLocationAssertion = m[1];
+      }
     }
     
     if(m[2] === 'a') {
@@ -239,11 +247,19 @@ class CFI {
         }
       }
 
+
       if(state === '[') {
         if(cur === ']' && !escape) {
           prevState = state;
           state = null;
           this.parseSideBias(o, f);
+          f = null;
+        } else if(cur === ',' && !escape) {
+          console.log("AAAAAA")
+          o.textLocationAssertion = {};
+          if(f) {
+            o.textLocationAssertion.pre = f;
+          }
           f = null;
         } else {
           if(!f) {
