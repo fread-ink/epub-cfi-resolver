@@ -19,7 +19,7 @@ var cfi = new CFI('epubcfi(/1/2!/1/2/3:4'); // parsing
 console.log(cfi.parts); // print parsed data
 ```
 
-To resolve the CFI, assuming `doc` contains a `Document` or `XMLDocument` object for the starting document:
+To resolve the CFI, assuming `doc` contains a `Document` or `XMLDocument` object for the starting document and `doc2` the object for the ending document:
 
 ```
 // Use first part of CFI to resolve URI for the second part
@@ -40,7 +40,7 @@ var bookmark = cfi.resolve(doc2);
 }
 ```
 
-You can then use e.g. `window.scrollTo()` or some other method to access show the location referenced by the CFI.
+You can then use e.g. `bookmark.node.scrollTo()` or some other method to show the location referenced by the CFI.
 
 ## Parser output
 
@@ -116,11 +116,11 @@ Not supported:
 
 * Simple Ranges
 
-Simple Ranges are not fully supported. They are parsed as the beginning location of the range. That is, for the triple <prefix>,<range-start>,<range-end> they are parsed as <prefix><range-start>.
+Simple Ranges are not fully supported. They are parsed as the beginning location of the range. That is, for the triple <prefix>,<range-start>,<range-end> it is parsed as <prefix><range-start>.
 
 ## Resolver
 
-The resolver only finds the relevant node and hands off any relevant information from the parser (e.g. offset into a text node). Currently the resolver prefers node IDs over child index number when locating nodes (if both are present) and completely ignores text location assertions in favor of the offset number. 
+The resolver only finds the relevant node and hands off any relevant information from the parser (e.g. offset into a text node). Currently the resolver prefers node IDs over child index number when locating nodes (if both are present) and completely ignores Text Location Assertions in favor of the offset number. Honestly it seems unclear what to do if Text Location Assertion fails. Should we scan forward and backward through the text to find matching text? If so, how far? What if the assertion isn't a unique occurrence in the text?
 
 If a node is specified using child node index 0 (e.g. `epubcfi(/0)`) or a number which is one higher than the total number of children, then the resolver currently just returns the first or last child respectively. The resolver is supposed to resolve to a location before the first node, or after the last node, but currently this is not implemented and instead references to the first or last node are returned.
 
@@ -152,8 +152,8 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 # ToDo
 
-* Implement simple ranges
-* Implement "before first" and "after last" node locations
+* Implement proper parsing of Simple Ranges
+* Implement proper parsing of "before first" and "after last" node locations
 * More unit tests
 
 # License and copyright
