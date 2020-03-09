@@ -74,6 +74,8 @@ Not supported:
 
 * Simple Ranges
 
+Simple Ranges are not fully supported. They are parsed as the beginning location of the range. That is, for the triple <prefix>,<range-start>,<range-end> they are parsed as <prefix><range-start>.
+
 ## Resolver
 
 The resolver only finds the relevant node and hands off any relevant information from the parser (e.g. offset into a text node). Currently the resolver prefers node IDs over child index number when locating nodes (if both are present) and completely ignores text location assertions in favor of the offset number. 

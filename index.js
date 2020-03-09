@@ -18,7 +18,7 @@ class CFI {
 
     var parsed, offset, newDoc;
     var subParts = [];
-    
+    var sawComma;
     while(str.length) {
       ({parsed, offset, newDoc} = this.parse(str));
       if(offset === null) throw new Error("Parsing failed");
@@ -31,6 +31,19 @@ class CFI {
       }
       
       str = str.slice(offset);
+      // Handle Simple Ranges by turning them into a normal non-range CFI
+      // at the start position of the range, by concatenating the
+      // first two parts of the triple and throwing away the third
+      if(str[0] === ',') {
+        if(sawComma) {
+          if(subParts.length) {
+            this.parts.push(subParts);
+          }
+          break;
+        }
+        str = str.slice(1);
+        sawComma = true;
+      }
     }
   }
     
@@ -66,23 +79,19 @@ class CFI {
     return o;
   }
   
-  // Parse a field that specifies a location within a node
-  // using e.g. :42 for offset or :42[don't panic]
-  // Parses spatial and temporal offset as well (though we don't use them)
-  // TODO parse Side Bias, e.g: :42[;s=b] or :42[foobar;s=a]
-  parse(loc) {
+  parse(cfi) {
     var o = {};
     const isNumber = new RegExp(/[\d]/);
     var f;
     var state;
     var prevState;
     var cur, escape;
-    var seenColon;
+    var seenColon = false;
     var seenSlash = false;
     var i;
-    for(i=0; i <= loc.length; i++) {
-      if(i < loc.length) {
-        cur = loc[i];
+    for(i=0; i <= cfi.length; i++) {
+      if(i < cfi.length) {
+        cur = cfi[i];
       } else {
         cur = '';
       }
@@ -129,7 +138,6 @@ class CFI {
         }
       }
 
-      // ignore spatial offsets
       if(state === '@') {
         let done = false;
         if(cur.match(isNumber) || cur === '.' || cur === ':') {
@@ -159,7 +167,6 @@ class CFI {
         }
       }
       
-      // ignore temporal offsets
       if(state === '~' ) {
         if(cur.match(isNumber) || cur === '.') {
           if(!f) {
@@ -183,6 +190,10 @@ class CFI {
         if(cur === '!') {
           i++;
           state = cur;
+          break;
+        }
+
+        if(cur === ',') {
           break;
         }
         

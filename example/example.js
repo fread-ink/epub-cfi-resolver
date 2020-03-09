@@ -15,6 +15,8 @@ var ex4 = "epubcfi(/6/14[cha!/p05ref]!/4[bo!/dy01]/10/2/1[foo]:5:3[don't!/ panic
 
 var ex5 = "epubcfi(/6/14[chap05ref]!/4[body01]/10/2/1[foo])";
 
+var ex6 = "epubcfi(/6/14[chap05ref]!/4[body01]/10/2/1,/42,/43)";
+
 const opf1 = `<?xml version="1.0"?>
 
 <package version="2.0" 
@@ -81,16 +83,17 @@ const chap1 = `
     </body>
 </html>`;
 
-/*
-var cfi = new CFI(ex4);
+
+var cfi = new CFI(ex6);
 for(let part of cfi.parts) {
   console.log("part:");
   for(let subpart of part) {
     console.log("  subpart:", subpart);
   }
 }
-*/
 
+
+/*
 
 var cfi = new CFI(testCFI2);
 
@@ -111,3 +114,4 @@ var bookmark = cfi.resolve(chap1DOM, {
 });
 
 console.log("bookmark:", bookmark);
+*/
