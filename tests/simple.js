@@ -6,7 +6,7 @@ var tape = require('tape');
 
 var CFI = require('../index.js');
 
-// Allow these tests to run outside of browser
+// Allow these tests to run outside of the browser
 var JSDOM = require('jsdom').JSDOM;
 function parseDOM(str, mimetype) {
   return new JSDOM(str, {
@@ -99,6 +99,16 @@ var tests = [
       "offset": 5
     },
     opts: {}
+  }, {
+    cfi: "epubcfi(/6/4[chap01ref]!/4[body01]/10[para05]/3:5)",
+    resolvedURI: "chapter01.xhtml",
+    resolved: {
+      "node": "0123456789",
+      "offset": 5
+    },
+    opts: {
+      ignoreIDs: true
+    }
   }
 ];
 
@@ -108,7 +118,8 @@ for(let test of tests) {
   if(test.resolvedURI) testCount++;
   if(test.resolved) testCount++;
 }
-
+console.log("COUNT:", testCount);
+  
 const opfDOM = parseDOM(docs.opf, 'application/xhtml+xml');
 const htmlDOM = parseDOM(docs.html, 'application/xhtml+xml');
 
@@ -118,14 +129,15 @@ tape('Simple tests', function(t) {
 
   var uri, bookmark;
   for(let test of tests) {
-    if(!test.parsed) continue;
 
     try {
       var cfi = new CFI(test.cfi);
       
       if(debug) console.log("parsed:", JSON.stringify(cfi.parts, null, 2));
-      
-      t.deepEqual(cfi.parts, test.parsed);
+
+      if(test.parsed) {
+        t.deepEqual(cfi.parts, test.parsed);
+      }
 
       if(test.resolvedURI) {
 
