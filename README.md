@@ -19,7 +19,7 @@ var cfi = new CFI('epubcfi(/1/2!/1/2/3:4'); // parsing
 console.log(cfi.parts); // print parsed data
 ```
 
-To resolve the CFI, assuming `doc` contains a `Document` or `XMLDocument` object for the starting document and `doc2` the object for the ending document:
+To resolve the CFI, assuming `doc` contains a `Document` or `XMLDocument` object for the starting document:
 
 ```
 // Use first part of CFI to resolve URI for the second part
@@ -27,6 +27,7 @@ var uri = cfi.resolveURI(0, doc);
 
 // Call some function to fetch document for second part of CFI then parse it
 var data = fetch(uri);
+
 var parser = new DOMParser();
 var doc2 = parser.parseFromString(data, 'text/html');
 
@@ -94,6 +95,24 @@ npm run build
 ```
 
 Then open `example/example.html` in a browser.
+
+# Using with node.js
+
+For use with node.js, instead of using `DOMParser` and `.parseFromString()` you can use the [jsdom](https://www.npmjs.com/package/jsdom) library like so:
+
+```
+var JSDOM = require('jsdom').JSDOM;
+
+var jsdom = new JSDOM(str, {
+  contentType: mimetype
+});
+
+var doc = jsdom.window.document;
+```
+
+Where `mimetype` is one of 'application/xhtml+xml' (for XHTML and XML data) or 'text/html' (for HTML data).
+
+The `doc` variable will contain a `Document` equivalent to the output from the browser's DOMParser `.parseFromString()` function.
 
 # Unit tests
 
@@ -184,7 +203,7 @@ Pros of using readium-cfi-js over this project:
 Other differences, this project vs. readium-cfi-js:
 
 * AGPLv3 vs. BSD-3-Clause
-* Hand-written state machine vs. uses a parser generator (pegjs) vs.
+* Hand-written state machine vs. uses a parser generator (pegjs)
 * Not so strict parsing/resolving vs. strict parsing/resolving
 
 # License and copyright
