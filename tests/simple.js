@@ -30,6 +30,18 @@ var tests = [
       ]
     ]
   }, {
+    cfi: "epubcfi(/1/0)",
+    parsed: [
+      [
+        {
+          "nodeIndex": 1
+        },
+        {
+          "nodeIndex": 0
+        }
+      ]
+    ]
+  }, {
     cfi: "epubcfi(/1/2:3[pre,post])",
     parsed: [
       [
@@ -172,8 +184,65 @@ var tests = [
     resolved: {
       "node": "0123456789",
       "offset": 5
-    },
-    opts: {}
+    }
+  }, {
+    cfi: "epubcfi(/6/4[chap01ref]!/4/10/0)",
+    parsed: [
+      [
+        {
+          "nodeIndex": 6
+        },
+        {
+          "nodeIndex": 4,
+          "nodeID": "chap01ref"
+        }
+      ],
+      [
+        {
+          "nodeIndex": 4
+        },
+        {
+          "nodeIndex": 10
+        },
+        {
+          "nodeIndex": 0
+        }
+      ]
+    ],
+    resolvedURI: "chapter01.xhtml",
+    resolved: {
+      "relativeToNode": "before",
+      "node": "xxx"
+    }
+  }, {
+    cfi: "epubcfi(/6/4[chap01ref]!/4/10/999)",
+    parsed: [
+      [
+        {
+          "nodeIndex": 6
+        },
+        {
+          "nodeIndex": 4,
+          "nodeID": "chap01ref"
+        }
+      ],
+      [
+        {
+          "nodeIndex": 4
+        },
+        {
+          "nodeIndex": 10
+        },
+        {
+          "nodeIndex": 999
+        }
+      ]
+    ],
+    resolvedURI: "chapter01.xhtml",
+    resolved: {
+      "relativeToNode": "after",
+      "node": "0123456789"
+    }
   }, {
     cfi: "epubcfi(/6/4[chap01ref]!/4[body01]/10[para05]/3:5)",
     resolvedURI: "chapter01.xhtml",

@@ -86,6 +86,12 @@ The parser will output:
 ]
 ```
 
+# Resolver output
+
+The resolve will output an object with a `.node` containing a reference to the node pointed to by the CFI and any additional properties from the parser relevant to position _within_ the node, e.g. `.offset`. See previous section for all possible properties.
+
+Lastly, the property `.relativeToNode` will be present if the CFI location was _before_ or _after_ a node (rather than _at_ or _inside_ a node). `.relativeToNode` can have the values "before" or "after".
+
 # Example
 
 To build the example:
@@ -136,11 +142,8 @@ Supported:
 
 Not supported:
 
-* Before first / after last locations
 * Simple Ranges
 * Sorting CFIs
-
-It is possible to specify CFIs as referencing a location immediately before or after an element, rather than directly on the element. This is not yet fully supported.
 
 Simple Ranges are not fully supported. They are parsed as the beginning location of the range. That is, for triples like <prefix>,<range-start>,<range-end> they are parsed as <prefix><range-start>.
 
@@ -148,9 +151,7 @@ Sorting CFIs, which is the same as computing their relative locations, is define
 
 ## Resolver
 
-The resolver only finds the relevant node and hands off any relevant information from the parser (e.g. offset into a text node). Currently the resolver prefers node IDs over child index number when locating nodes (if both are present) and completely ignores Text Location Assertions in favor of the offset number. Honestly it seems unclear what to do if Text Location Assertion fails. Should we scan forward and backward through the text to find matching text? If so, how far? What if the assertion isn't a unique occurrence in the text?
-
-If a node is specified using child node index 0 (e.g. `epubcfi(/0)`) or a number which is one higher than the total number of children, then the resolver currently just returns the first or last child respectively. The resolver is supposed to resolve to a location before the first node, or after the last node, but currently this is not implemented and instead references to the first or last node are returned.
+The resolver only finds the relevant node and hands off any relevant information from the parser (e.g. offset into a text node). Currently the resolver prefers node IDs over child index number when locating nodes (if both are present) and completely ignores Text Location Assertions in favor of the offset number. Honestly it seems unclear what to do if Text Location Assertion fails. Should we scan forward and backward through the text to find matching text? If so, how far? What if the assertion isn't a unique occurrence in the text? The only simple action to take is to throw an error, but that would mean that the user clicks a link and either nothing happens or they get an error. Isn't it better that the link takes them somewhere that's probably close to where they expect to go?
 
 # About EPUB-CFI
 
@@ -181,7 +182,6 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 # ToDo
 
 * Implement proper parsing of Simple Ranges
-* Implement proper parsing of "before first" and "after last" node locations
 * Unit tests for bad data / stuff that should fail
 
 # Other similar projects

@@ -255,7 +255,6 @@ class CFI {
           this.parseSideBias(o, f);
           f = null;
         } else if(cur === ',' && !escape) {
-          console.log("AAAAAA")
           o.textLocationAssertion = {};
           if(f) {
             o.textLocationAssertion.pre = f;
@@ -292,7 +291,7 @@ class CFI {
       escape = false;
     }
     
-    if(!o.nodeIndex) throw new Error("Missing child node index in CFI");
+    if(!o.nodeIndex && o.nodeIndex !== 0) throw new Error("Missing child node index in CFI");
     
     return {parsed: o, offset: i, newDoc: (state === '!')};
   }
@@ -300,7 +299,8 @@ class CFI {
   resolveNode(index, dom, opts) {
     opts = opts || {};
     if(!dom) throw new Error("Missing DOM argument");
-
+    var o = {};
+    
     const subparts = this.parts[index];
     if(!subparts) throw new Error("Missing CFI part for index: " + index);
     
@@ -340,14 +340,18 @@ class CFI {
       nodeIndex = subpart.nodeIndex - 1;
       if(nodeIndex < 0) {
         nodeIndex = 0;
+        o.relativeToNode = 'before';
       } else if(nodeIndex > node.childNodes.length - 1) {
         nodeIndex = node.childNodes.length - 1;
+        o.relativeToNode = 'after';
       }
       node = node.childNodes[nodeIndex];
       
       if(!node) throw new Error("CFI did not match any nodes in this document");
     }
-    return node;
+    
+    o.node = node
+    return o;
   }
   
   // Each part of a CFI (as separated by '!')
@@ -365,7 +369,8 @@ class CFI {
       throw new Error("index is out of bounds");
     }
 
-    var node = this.resolveNode(index, dom, opts);
+    var o = this.resolveNode(index, dom, opts);
+    var node = o.node;
 
     const tagName = node.tagName.toLowerCase();
     if(tagName === 'itemref'
@@ -405,11 +410,11 @@ class CFI {
   // document referenced by the CFI
   // and returns the node and offset into that node
   resolve(dom, opts) {
-    var o = {};
+
     const index = this.parts.length - 1;
     const subparts = this.parts[index];
-    var node = this.resolveNode(index, dom, opts);
-    o.node = node;
+    var o = this.resolveNode(index, dom, opts);
+
     const lastpart = subparts[subparts.length - 1];
 
     if(lastpart.offset) {
