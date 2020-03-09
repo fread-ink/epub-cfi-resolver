@@ -11,6 +11,10 @@ var ex3 = "epubcfi(/6/14[chap05ref]!/4[body01]/10/2/1:5:3[;s=a]~3.4@1:2)";
 
 var ex4 = "epubcfi(/6/14[chap05ref]!/4[body01]/10/2/1[foo]:5:3[don't panic;s=b]~3.4@1:2)";
 
+var ex4 = "epubcfi(/6/14[cha!/p05ref]!/4[bo!/dy01]/10/2/1[foo]:5:3[don't!/ panic;s=b]~3.4@1:2)";
+
+var ex5 = "epubcfi(/6/14[chap05ref]!/4[body01]/10/2/1[foo])";
+
 const opf1 = `<?xml version="1.0"?>
 
 <package version="2.0" 
@@ -77,9 +81,19 @@ const chap1 = `
     </body>
 </html>`;
 
+/*
+var cfi = new CFI(ex4);
+for(let part of cfi.parts) {
+  console.log("part:");
+  for(let subpart of part) {
+    console.log("  subpart:", subpart);
+  }
+}
+*/
 
 
 var cfi = new CFI(testCFI2);
+
 
 var parser = new DOMParser();
 var opfDOM = parser.parseFromString(opf1, 'text/xml');

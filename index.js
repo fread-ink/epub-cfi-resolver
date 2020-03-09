@@ -3,6 +3,7 @@
 class CFI {
 
   constructor(str) {
+    this.cfi = str;
     const isCFI = new RegExp(/^epubcfi\((.*)\)$/);
     
     str = str.trim();
@@ -11,72 +12,28 @@ class CFI {
     if(m.length < 2) return; // Empty CFI
 
     str = m[1];
-
-    // '!' does not need to be escaped in a CFI
-    // so we can get away with a simple split
+    
     this.parts = [];
-    const partStrs = str.split('!');
 
-    var part;
-    var i;
-    for(i=0; i < partStrs.length; i++) {
-      part = this.parseDoc(partStrs[i], (i === partStrs.length - 1));
-      if(part) {
-        this.parts.push(part);
+
+    var parsed, offset, newDoc;
+    var subParts = [];
+    
+    while(str.length) {
+      ({parsed, offset, newDoc} = this.parse(str));
+      if(offset === null) throw new Error("Parsing failed");
+      
+      subParts.push(parsed);
+      
+      if(newDoc || str.length - offset <= 0) {
+        this.parts.push(subParts);
+        subParts = [];
       }
+      
+      str = str.slice(offset);
     }
   }
-  
-  parseDoc(doc, isLast) {
-    // '/' does not need to be escaped in a CFI
-    // so we can get away with a simple split
-
-    var o = {};
     
-    const parts = doc.split('/').slice(1);
-    if(!parts.length) return null;
-
-    var ret = [];
-    
-    var i, part;
-    for(i=0; i < parts.length; i++) {
-      part = parts[i];
-      const loc = this.parseLocation(part, (isLast && i === parts.length - 1));
-      ret.push(loc);
-    }
-    return ret;
-  }
-
-  parseLocation(loc, isLast) {
-    const m = loc.match(/(\d+)(\[[^\[\]]+\])?(.*)?/);
-    if(!m || m.length < 4) {
-      return null;
-    }
-    
-    const o = {};
-    
-    const nodeIndex = parseInt(m[1]);
-    if(nodeIndex) {
-      o.nodeIndex = nodeIndex;
-    }
-
-    if(m[2]) {
-      const nodeID = m[2].slice(1, -1);
-      if(nodeID) {
-        o.nodeID = nodeID;
-      }
-    }
-
-    if(isLast && m[3]) {
-      const subLoc = this.parseSubLocation(m[3]);
-      if(subLoc) {
-        Object.assign(o, subLoc);
-      }
-    }
-    
-    return o;
-  }
-  
   parseSideBias(o, loc) {
     if(!loc) return;
     const m = loc.trim().match(/^(.*);s=([ba])$/);
@@ -95,7 +52,7 @@ class CFI {
     }
   }
   
-  parseRange(range) {
+  parseSpatialRange(range) {
     if(!range) return undefined;
     const m = range.trim().match(/^([\d\.]+):([\d\.]+)$/);
     if(!m || m.length < 3) return undefined;
@@ -113,7 +70,7 @@ class CFI {
   // using e.g. :42 for offset or :42[don't panic]
   // Parses spatial and temporal offset as well (though we don't use them)
   // TODO parse Side Bias, e.g: :42[;s=b] or :42[foobar;s=a]
-  parseSubLocation(loc) {
+  parse(loc) {
     var o = {};
     const isNumber = new RegExp(/[\d]/);
     var f;
@@ -121,18 +78,36 @@ class CFI {
     var prevState;
     var cur, escape;
     var seenColon;
+    var seenSlash = false;
     var i;
     for(i=0; i <= loc.length; i++) {
       if(i < loc.length) {
         cur = loc[i];
       } else {
-        // use '/' as terminating character since it has no meaning here
-        cur = '/';
+        cur = '';
       }
-
       if(cur === '^' && !escape) {
         escape = true;
         continue;
+      }
+
+      if(state === '/') {
+        if(cur.match(isNumber)) {
+          if(!f) {
+            f = cur;
+          } else {
+            f += cur;
+          }
+          escape = false;
+          continue;
+        } else {
+          if(f) {
+            o.nodeIndex = parseInt(f);
+            f = null;
+          }
+          prevState = state;
+          state = null;
+        }
       }
       
       if(state === ':') {
@@ -179,7 +154,7 @@ class CFI {
         } else {
           prevState = state;
           state = null;
-          if(f && seenColon) o.spatial = this.parseRange(f);
+          if(f && seenColon) o.spatial = this.parseSpatialRange(f);
           f = null;
         }
       }
@@ -205,17 +180,42 @@ class CFI {
       }
       
       if(!state) {
+        if(cur === '!') {
+          i++;
+          state = cur;
+          break;
+        }
+        
+        if(cur === '/') {
+          if(seenSlash) {
+            break;
+          } else {
+            seenSlash = true;
+            prevState = state;
+            state = cur;
+            escape = false;
+            continue;
+          }
+        }
+        
         if(cur === ':' || cur === '~' || cur === '@') {
           prevState = state;
           state = cur;
           escape = false;
-          seenColon = false;
+          seenColon = false; // only relevant for '@'
           continue;
-        }
+        }        
 
         if(cur === '[' && !escape && prevState === ':') {
           prevState = state;
           state = '[';
+          escape = false;
+          continue;
+        }
+
+        if(cur === '[' && !escape && prevState === '/') {
+          prevState = state;
+          state = 'nodeID';
           escape = false;
           continue;
         }
@@ -237,10 +237,30 @@ class CFI {
         escape = false;
         continue;
       }
-     
+
+      if(state === 'nodeID') {
+        if(cur === ']' && !escape) {
+          prevState = state;
+          state = null;
+          o.nodeID = f;
+          f = null;
+        } else {
+          if(!f) {
+            f = cur;
+          } else {
+            f += cur;
+          }
+        }
+        escape = false;
+        continue;
+      }
+      
       escape = false;
     }
-    return o;
+    
+    if(!o.nodeIndex) throw new Error("Missing child node index in CFI");
+    
+    return {parsed: o, offset: i, newDoc: (state === '!')};
   }
 
   resolveNode(index, dom, opts) {
