@@ -13,11 +13,14 @@
   },
   "devDependencies": {
     "browserify": "^16.5.0",
+    "jsdom": "^16.2.0",
+    "tape": "^4.13.2",
     "watchify": "^3.11.1"
   },
   "scripts": {
     "build": "browserify example/example.js -o example/bundle.js",
-    "watch": "watchify example/example.js -o example/bundle.js"
+    "watch": "watchify example/example.js -o example/bundle.js",
+    "test": "tape tests/*.js"
   },
   "license": "AGPL-3.0"
 }

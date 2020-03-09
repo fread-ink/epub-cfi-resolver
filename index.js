@@ -1,5 +1,12 @@
 'use strict';
 
+// If using node.js
+if(typeof Node === 'undefined') {
+  var ELEMENT_NODE = 1;
+} else { // In the browser
+  var ELEMENT_NODE = Node.ELEMENT_NODE;
+}
+
 class CFI {
 
   constructor(str) {
@@ -283,19 +290,20 @@ class CFI {
     
     // Traverse backwards until a subpart with a valid ID is found
     // or the first subpart is reached
-    var node;
+    var startNode;
     if(index === 0) {
-      node = dom.querySelector('package');
+      startNode = dom.querySelector('package');
     } else {
       for(let n of dom.childNodes) {
-        if(n.nodeType === Node.ELEMENT_NODE) {
-          node = n;
+        if(n.nodeType === ELEMENT_NODE) {
+          startNode = n;
           break;
         }
       }
     }
-    if(!node) throw new Error("Document incompatible with CFIs");
-    
+    if(!startNode) throw new Error("Document incompatible with CFIs");
+
+    var node = startNode;
     var startFrom = 0;
     var i, subpart;
     for(i=subparts.length-1; i >=0; i--) {
@@ -305,8 +313,12 @@ class CFI {
         break;
       }
     }
-    var nodeIndex;
+
+    if(!node) {
+      node = startNode;
+    }
     
+    var nodeIndex;
     for(i=startFrom; i < subparts.length; i++) {
       subpart = subparts[i];
       nodeIndex = subpart.nodeIndex - 1;
@@ -342,6 +354,7 @@ class CFI {
     const tagName = node.tagName.toLowerCase();
     if(tagName === 'itemref'
        && node.parentNode.tagName.toLowerCase() === 'spine') {
+
       const idref = node.getAttribute('idref');
       if(!idref) throw new Error("Referenced node had not 'idref' attribute");
       node = dom.getElementById(idref);
