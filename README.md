@@ -177,7 +177,7 @@ Pros of using readium-cfi-js over this project:
 
 Other differences, this project vs. readium-cfi-js:
 
-* BSD-3-Clause vs. AGPLv3
+* AGPLv3 vs. BSD-3-Clause
 * Hand-written state machine vs. uses a parser generator (pegjs) vs.
 * Not so strict parsing vs. strict parsing
 
