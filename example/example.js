@@ -1,7 +1,10 @@
 'use strict';
 
 var CFI = require('../index.js');
-var docs = require('../test_data/from_spec.js');
+
+//var docs = require('../test_data/from_spec.js');
+//var docs = require('../test_data/no_whitespace.js');
+var docs = require('../test_data/cdata.js');
 
 var testCFI2 = "epubcfi(/6/4[chap01ref]!/4[body01]/10[para05]/3:9[;s=a])";
 

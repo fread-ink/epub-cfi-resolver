@@ -3,8 +3,12 @@
 // If using node.js
 if(typeof Node === 'undefined') {
   var ELEMENT_NODE = 1;
+  var TEXT_NODE = 3;
+  var CDATA_SECTION_NODE = 4;
 } else { // In the browser
   var ELEMENT_NODE = Node.ELEMENT_NODE;
+  var TEXT_NODE = Node.TEXT_NODE;
+  var CDATA_SECTION_NODE = Node.CDATA_SECTION_NODE;
 }
 
 class CFI {
@@ -296,10 +300,98 @@ class CFI {
     return {parsed: o, offset: i, newDoc: (state === '!')};
   }
 
+  // The CFI counts child nodes differently from the DOM
+  getChildNodeByCFIIndex(parentNode, index, offset) {
+    const children = parentNode.childNodes;
+    if(!children.length) return {node: parentNode, offset: 0};
+
+    // index is pointing to the virtual node before the first node
+    // as defined in the CFI spec
+    if(index <= 0) {
+      return {node: children[0], relativeToNode: 'before', offset: 0}
+    }
+      
+    var cfiCount = 0;
+    var lastChild;
+    var i, child;
+    for(i=0; i < children.length; i++) {
+      child = children[i];
+      switch(child.nodeType) {
+      case ELEMENT_NODE:
+
+        // If the previous node was also an element node
+        // then we have to pretend there was a text node in between
+        // the current and previous nodes (according to the CFI spec)
+        // so we increment cfiCount by two
+        if(cfiCount % 2 === 0) {
+          cfiCount += 2;
+          if(cfiCount >= index) {
+            return {node: child, offset: 0}
+          }
+        } else { // Previous node was a text node
+          cfiCount += 1;
+          if(cfiCount === index) {
+            return {node: child, offset: 0}
+
+            // This happens when offset into the previous text node was greater
+            // than the number of characters in that text node
+            // So we return a position at the end of the previous text node
+          } else if(cfiCount > index) {
+            if(!lastChild) {
+              return {node: parentNode, offset: 0};
+            }
+            return {node: lastChild, offset: lastChild.textContent.length};
+          }
+        }
+        lastChild = child;
+        break;
+      case TEXT_NODE:
+      case CDATA_SECTION_NODE:
+        // If this is the first node or the previous node was an element node
+        if(cfiCount === 0 || cfiCount % 2 === 0) {
+          cfiCount += 1;
+        } else {
+          // If previous node was a text node then they should be combined
+          // so we count them as one, meaning we don't increment the count
+        }
+
+        if(cfiCount === index) {
+          // If offset is greater than the length of the current text node
+          // then we assume that the next node will also be a text node
+          // and that we'll be combining them with the current node
+          if(offset >= child.textContent.length) {
+            offset -= child.textContent.length
+          } else {
+            return {node: child, offset: offset}
+          }
+        }
+        lastChild = child;
+        break;
+      default:
+        continue
+      }
+    }
+
+    // index is pointing to the virtual node after the last child
+    // as defined in the CFI spec
+    if(index > cfiCount) {
+      var o = {relativeToNode: 'after', offset: 0};
+      if(!lastChild) {
+        o.node = parentNode;
+      } else {
+        o.node = lastChild;
+      }
+      if(o.node.nodeType === TEXT_NODE || o.node.nodeType === CDATA_SECTION_NODE) {
+        o.offset = o.node.textContent.length;
+      }
+      return o;
+    }
+    
+  }
+
   resolveNode(index, dom, opts) {
     opts = opts || {};
     if(!dom) throw new Error("Missing DOM argument");
-    var o = {};
     
     const subparts = this.parts[index];
     if(!subparts) throw new Error("Missing CFI part for index: " + index);
@@ -334,23 +426,15 @@ class CFI {
       node = startNode;
     }
     
+    var o = {node, offset: 0};
+    
     var nodeIndex;
     for(i=startFrom; i < subparts.length; i++) {
       subpart = subparts[i];
-      nodeIndex = subpart.nodeIndex - 1;
-      if(nodeIndex < 0) {
-        nodeIndex = 0;
-        o.relativeToNode = 'before';
-      } else if(nodeIndex > node.childNodes.length - 1) {
-        nodeIndex = node.childNodes.length - 1;
-        o.relativeToNode = 'after';
-      }
-      node = node.childNodes[nodeIndex];
-      
-      if(!node) throw new Error("CFI did not match any nodes in this document");
+
+      o = this.getChildNodeByCFIIndex(o.node, subpart.nodeIndex, subpart.offset);
     }
     
-    o.node = node
     return o;
   }
   
@@ -406,6 +490,10 @@ class CFI {
     
   }
 
+  deepClone(o) {
+    return JSON.parse(JSON.stringify(o));
+  }
+
   // Takes the Document or XMLDocument for the final
   // document referenced by the CFI
   // and returns the node and offset into that node
@@ -414,17 +502,15 @@ class CFI {
     const index = this.parts.length - 1;
     const subparts = this.parts[index];
     var o = this.resolveNode(index, dom, opts);
-
-    const lastpart = subparts[subparts.length - 1];
-
-    if(lastpart.offset) {
-      o.offset = lastpart.offset;
-    }
-
-    if(lastpart.sideBias) {
-      o.sideBias = lastpart.sideBias;
-    }
-    return o;
+    
+    var lastpart = this.deepClone(subparts[subparts.length - 1]);
+    
+    delete lastpart.nodeIndex;
+    if(!lastpart.offset) delete o.offset;
+    
+    Object.assign(lastpart, o);
+    
+    return lastpart;
   }
 }
 
