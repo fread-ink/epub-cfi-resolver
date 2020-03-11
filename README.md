@@ -96,7 +96,7 @@ Lastly, the property `.relativeToNode` will be present if the CFI location was _
 
 To build the example:
 
-``
+```
 npm run build
 ```
 
@@ -183,9 +183,11 @@ epubcfi(/1/2!/6[foo]/7:42[don't panic])
 The `!` marks the beginning of a new document so this CFI tells us to go to the 2nd child node of the 1st child node of the current document, then look for an attribute in that node that references another document (e.g. `href=`) and continue resolving the rest of the CFI in the referenced document.
 
 # ToDo
+
+* Implement proper parsing of Simple Ranges
+* Correct offsets using Text Location Assertions when possible
 * Support built-in entitry replacement, e.g. using [this npm module](https://www.npmjs.com/package/entities)
 * Support [custom entity replacement](https://www.w3.org/TR/2008/REC-xml-20081126/#intern-replacement)
-* Implement proper parsing of Simple Ranges
 * Implement CFI generator
 * Unit tests for bad data / stuff that should fail
 
