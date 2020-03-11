@@ -51,8 +51,16 @@ var bookmark = cfi.resolve(doc2, {
 }
 ```
 
-You can then use e.g. `bookmark.node.scrollTo()` or some other method to show the location referenced by the CFI.
+You can then use e.g. `scrollTo()` like so:
 
+```
+var range = document.createRange(node);
+range.setStart(bookmark.node, bookmark.offset);
+range.setEnd(bookmark.node, bookmark.offset + 1);
+
+var bookmarkY = range.getBoundingClientRect().top + window.scrollY;
+scrollTo(0, bookmarkY);
+```
 
 # API
 
@@ -249,7 +257,7 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 Pros of using this project over readium-cfi-js:
 
-* ~20 kB vs. ~400 kB dist file (both numbers for un-minified js)
+* ~20 kB vs. ~400 kB dist file (both numbers are for un-minified js)
 * Documented usage and example code vs. no documentation on usage
 * No dependencies vs. depends on jquery and lodash
 * Works with node.js vs. requires browser
