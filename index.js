@@ -549,7 +549,8 @@ class CFI {
       if(!href) throw new Error(tagName + " element is missing 'xlink:href' attribute");
       return href;
     }
-    
+
+    throw new Error("No URI found");
   }
 
   deepClone(o) {
