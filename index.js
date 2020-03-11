@@ -11,6 +11,11 @@ if(typeof Node === 'undefined') {
   var CDATA_SECTION_NODE = Node.CDATA_SECTION_NODE;
 }
 
+function cfiEscape(str) {
+  // TODO implement
+  return str;
+}
+
 class CFI {
 
   constructor(str, opts) {
@@ -81,7 +86,40 @@ class CFI {
       this.isRange = true;
     }
   }
+  
+  // TODO complete this
+  static generate(node, offset, extra) {
 
+    var cfi = '';
+    var id = node.id;
+    var childCount = 1;
+    while(true) {
+      
+      if(node.previousSibling) {
+        // TODO fix counts so they follow the CFI standard
+        node = node.previousSibling;
+        childCount++;
+      } else if(node.parentNode) {
+        // TODO cfiEscape currently does nothing
+        cfi = '/'+childCount+((id) ? '['+cfiEscape(id)+']' : '') + cfi;
+        id = null;
+        childCount = 1;
+        node = node.parentNode;
+      } else {
+        break;
+      }
+    }
+    // TODO recalculate offset to account for multiple adjacent text nodes
+    if(offset) {
+      cfi = cfi + ':'+offset;
+    }
+    if(extra) {
+      cfi = cfi + extra;
+    }
+    
+    return 'epubcfi('+cfi+')';
+  }
+  
   decodeEntities(dom, str) {
     try {
       const el = dom.createElement('textarea');

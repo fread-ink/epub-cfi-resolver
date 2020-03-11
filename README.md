@@ -248,7 +248,7 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 # ToDo
 
-* Implement CFI generator
+* Complete the CFI generator
 * Unit tests for bad data / stuff that should fail
 
 # Other similar projects

@@ -64,3 +64,8 @@ var bookmark = cfi.resolve(chap1DOM, {
 console.log("bookmark:", bookmark);
 
 
+
+var el = chap1DOM.querySelector('#para05');
+
+var c = CFI.generate(el, 0);
+console.log("Generated:", c);
