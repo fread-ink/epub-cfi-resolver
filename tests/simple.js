@@ -253,6 +253,73 @@ var tests = [
     opts: {
       ignoreIDs: true
     }
+  }, {
+    cfi: "epubcfi(/6/4[chap01ref]!/4[body01],/10[para05]/3:5,/10[para05]/3:8)",
+    parsed: {
+      "from": [
+        [
+          {
+            "nodeIndex": 6
+          },
+          {
+            "nodeIndex": 4,
+            "nodeID": "chap01ref"
+          }
+        ],
+        [
+          {
+            "nodeIndex": 4,
+            "nodeID": "body01"
+          },
+          {
+            "nodeIndex": 10,
+            "nodeID": "para05"
+          },
+          {
+            "nodeIndex": 3,
+            "offset": 5
+          }
+        ]
+      ],
+      "to": [
+        [
+          {
+            "nodeIndex": 6
+          },
+          {
+            "nodeIndex": 4,
+            "nodeID": "chap01ref"
+          }
+        ],
+        [
+          {
+            "nodeIndex": 4,
+            "nodeID": "body01"
+          },
+          {
+            "nodeIndex": 10,
+            "nodeID": "para05"
+          },
+          {
+            "nodeIndex": 3,
+            "offset": 8
+          }
+        ]
+      ],
+      "isRange": true
+    },
+    resolvedURI: "chapter01.xhtml",
+    resolved: {
+      "from": {
+        "offset": 5,
+        "node": "0123456789"
+      },
+      "to": {
+        "offset": 8,
+        "node": "0123456789"
+      },
+      "isRange": true
+    }
   }
 ];
 
@@ -266,6 +333,22 @@ for(let test of tests) {
 const opfDOM = parseDOM(docs.opf, 'application/xhtml+xml');
 const htmlDOM = parseDOM(docs.html, 'application/xhtml+xml');
 
+function getRangeContents(range) {
+  const documentFragment = range.cloneContents();
+  console.log('aaaaaaaaaaaaaaa', range.toString());
+  var children = documentFragment.childNodes;
+  var data = '';
+  for(let child of children) {
+    console.log("CHILD:", child);
+    if(child.outerHTML) {
+      data += child.outerHTML;
+    } else if(child.textContent) {
+      data += child.textContent;
+    }
+  }
+  return data;
+}
+
 tape('Simple tests', function(t) {
   
   t.plan(testCount);
@@ -276,10 +359,10 @@ tape('Simple tests', function(t) {
     try {
       var cfi = new CFI(test.cfi);
       
-      if(debug) console.log("parsed:", JSON.stringify(cfi.parts, null, 2));
+      if(debug) console.log("parsed:", JSON.stringify(cfi.get(), null, 2));
 
       if(test.parsed) {
-        t.deepEqual(cfi.parts, test.parsed);
+        t.deepEqual(cfi.get(), test.parsed);
       }
 
       if(test.resolvedURI) {
@@ -292,7 +375,12 @@ tape('Simple tests', function(t) {
       if(test.resolved) {
 
         bookmark = cfi.resolve(htmlDOM, test.opts);
-        bookmark.node = bookmark.node.outerHTML || bookmark.node.textContent;
+        if(bookmark.isRange) {
+          bookmark.from.node = bookmark.from.node.outerHTML || bookmark.from.node.textContent;
+          bookmark.to.node = bookmark.to.node.outerHTML || bookmark.to.node.textContent;
+        } else {
+          bookmark.node = bookmark.node.outerHTML || bookmark.node.textContent;
+        }
         if(debug) console.log("resolved:", JSON.stringify(bookmark, null, 2));
         t.deepEqual(bookmark, test.resolved);
       }

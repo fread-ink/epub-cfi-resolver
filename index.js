@@ -13,7 +13,13 @@ if(typeof Node === 'undefined') {
 
 class CFI {
 
-  constructor(str) {
+  constructor(str, opts) {
+    this.opts = Object.assign({
+      // If CFI is a Simple Range, pretend it isn't
+      // by parsing only the start of the range
+      flattenRange: false 
+    }, opts || {});
+    
     this.cfi = str;
     const isCFI = new RegExp(/^epubcfi\((.*)\)$/);
     
@@ -23,41 +29,94 @@ class CFI {
     if(m.length < 2) return; // Empty CFI
 
     str = m[1];
-    
     this.parts = [];
-
 
     var parsed, offset, newDoc;
     var subParts = [];
-    var sawComma;
+    var sawComma = 0;
     while(str.length) {
       ({parsed, offset, newDoc} = this.parse(str));
-      if(offset === null) throw new Error("Parsing failed");
+      if(!parsed || offset === null) throw new Error("Parsing failed");
+      if(sawComma && newDoc) throw new Error("CFI is a range that spans multiple documents. This is not allowed");
       
       subParts.push(parsed);
-      
+
+      // Handle end of string
       if(newDoc || str.length - offset <= 0) {
-        this.parts.push(subParts);
+        // Handle end if this was a range
+        if(sawComma === 2) {
+          this.to = subParts;
+        } else { // not a range
+          this.parts.push(subParts);
+        }
         subParts = [];
       }
       
       str = str.slice(offset);
-      // Handle Simple Ranges by turning them into a normal non-range CFI
-      // at the start position of the range, by concatenating the
-      // first two parts of the triple and throwing away the third
+      
+      // Handle Simple Ranges
       if(str[0] === ',') {
-        if(sawComma) {
+        if(sawComma === 0) {
           if(subParts.length) {
             this.parts.push(subParts);
           }
-          break;
+          subParts = [];
+        } else if(sawComma === 1) {
+          if(subParts.length) {
+            this.from = subParts;
+          }
+          subParts = [];
         }
         str = str.slice(1);
-        sawComma = true;
+        sawComma++;
       }
     }
+    if(this.from && this.from.length) {
+      if(this.opts.flattenRange || !this.to || !this.to.length) {
+        this.parts = this.parts.concat(this.from);
+        delete this.from;
+        delete this.to;
+        return;
+      }
+      this.isRange = true;
+    }
   }
-    
+
+  // decode HTML/XML entities and compute length
+  trueLength(dom, str) {
+    const el = dom.createElement('textarea');
+    el.innerHTML = str;
+    return el.value.length;
+  }
+  
+  getFrom() {
+    if(!this.isRange) throw new Error("Trying to get beginning of non-range CFI");
+    if(!this.from) {
+      return this.deepClone(this.parts);
+    }
+    const parts = this.deepClone(this.parts);
+    parts[parts.length-1] = parts[parts.length-1].concat(this.from);
+    return parts;
+  }
+
+  getTo()  {
+    if(!this.isRange) throw new Error("Trying to get end of non-range CFI");
+    const parts = this.deepClone(this.parts);
+    parts[parts.length-1] = parts[parts.length-1].concat(this.to);
+    return parts
+  }
+  
+  get() {
+    if(this.isRange) {
+      return {
+        from: this.getFrom(),
+        to: this.getTo(),
+        isRange: true
+      };
+    }
+    return this.deepClone(this.parts);
+  }
+  
   parseSideBias(o, loc) {
     if(!loc) return;
     const m = loc.trim().match(/^(.*);s=([ba])$/);
@@ -301,7 +360,7 @@ class CFI {
   }
 
   // The CFI counts child nodes differently from the DOM
-  getChildNodeByCFIIndex(parentNode, index, offset) {
+  getChildNodeByCFIIndex(dom, parentNode, index, offset) {
     const children = parentNode.childNodes;
     if(!children.length) return {node: parentNode, offset: 0};
 
@@ -340,7 +399,7 @@ class CFI {
             if(!lastChild) {
               return {node: parentNode, offset: 0};
             }
-            return {node: lastChild, offset: lastChild.textContent.length};
+            return {node: lastChild, offset: this.trueLength(dom, lastChild.textContent)};
           }
         }
         lastChild = child;
@@ -359,8 +418,9 @@ class CFI {
           // If offset is greater than the length of the current text node
           // then we assume that the next node will also be a text node
           // and that we'll be combining them with the current node
-          if(offset >= child.textContent.length) {
-            offset -= child.textContent.length
+          let trueLength = this.trueLength(dom, child.textContent);
+          if(offset >= trueLength) {
+            offset -= trueLength;
           } else {
             return {node: child, offset: offset}
           }
@@ -382,26 +442,25 @@ class CFI {
         o.node = lastChild;
       }
       if(o.node.nodeType === TEXT_NODE || o.node.nodeType === CDATA_SECTION_NODE) {
-        o.offset = o.node.textContent.length;
+        o.offset = this.trueLength(dom, o.node.textContent.length);
       }
       return o;
     }
     
   }
 
-  resolveNode(index, dom, opts) {
-    opts = opts || {};
+  resolveNode(index, subparts, dom, opts) {
+    opts = Object.assign({}, opts || {});
     if(!dom) throw new Error("Missing DOM argument");
-    
-    const subparts = this.parts[index];
-    if(!subparts) throw new Error("Missing CFI part for index: " + index);
     
     // Traverse backwards until a subpart with a valid ID is found
     // or the first subpart is reached
     var startNode;
     if(index === 0) {
       startNode = dom.querySelector('package');
-    } else {
+    }
+    
+    if(!startNode) {
       for(let n of dom.childNodes) {
         if(n.nodeType === ELEMENT_NODE) {
           startNode = n;
@@ -432,7 +491,7 @@ class CFI {
     for(i=startFrom; i < subparts.length; i++) {
       subpart = subparts[i];
 
-      o = this.getChildNodeByCFIIndex(o.node, subpart.nodeIndex, subpart.offset);
+      o = this.getChildNodeByCFIIndex(dom, o.node, subpart.nodeIndex, subpart.offset);
     }
     
     return o;
@@ -453,7 +512,10 @@ class CFI {
       throw new Error("index is out of bounds");
     }
 
-    var o = this.resolveNode(index, dom, opts);
+    const subparts = this.parts[index];
+    if(!subparts) throw new Error("Missing CFI part for index: " + index);
+    
+    var o = this.resolveNode(index, subparts, dom, opts);
     var node = o.node;
 
     const tagName = node.tagName.toLowerCase();
@@ -494,14 +556,12 @@ class CFI {
     return JSON.parse(JSON.stringify(o));
   }
 
-  // Takes the Document or XMLDocument for the final
-  // document referenced by the CFI
-  // and returns the node and offset into that node
-  resolve(dom, opts) {
+  resolveLocation(dom, parts) {
+    const index = parts.length - 1;
+    const subparts = parts[index];
+    if(!subparts) throw new Error("Missing CFI part for index: " + index);
 
-    const index = this.parts.length - 1;
-    const subparts = this.parts[index];
-    var o = this.resolveNode(index, dom, opts);
+    var o = this.resolveNode(index, subparts, dom);
     
     var lastpart = this.deepClone(subparts[subparts.length - 1]);
     
@@ -510,7 +570,51 @@ class CFI {
     
     Object.assign(lastpart, o);
     
-    return lastpart;
+    return lastpart;    
+  }
+  
+  // Takes the Document or XMLDocument for the final
+  // document referenced by the CFI
+  // and returns the node and offset into that node
+  resolve(dom, opts) {
+    opts = Object.assign({
+      // If true, return a proper DOM Range object
+      // TODO implement
+      range: false
+    }, opts || {});
+    
+    if(!this.isRange) {
+      return this.resolveLocation(dom, this.parts);
+    }
+
+    if(opts.range) {
+      const range = dom.createRange();
+      const from = this.getFrom();
+      if(from.relativeToNode === 'before') {
+        range.setStartBefore(from.node, from.offset)
+      } else if(from.relativeToNode === 'after') {
+        range.setStartAfter(from.node, from.offset)
+      } else {
+        range.setStart(from.node, from.offset);
+      }
+
+      const to = this.getTo();
+      if(to.relativeToNode === 'before') {
+        range.setEndBefore(to.node, to.offset)
+      } else if(to.relativeToNode === 'after') {
+        range.setEndAfter(to.node, to.offset)
+      } else {
+        range.setEnd(to.node, to.offset);
+      }
+
+      return range;
+    }
+    
+    return {
+      from: this.resolveLocation(dom, this.getFrom()),
+      to: this.resolveLocation(dom, this.getTo()),
+      isRange: true
+    };
   }
 }
 

@@ -8,14 +8,34 @@ var docs = require('../test_data/cdata.js');
 
 var testCFI2 = "epubcfi(/6/4[chap01ref]!/4[body01]/10[para05]/3:9[;s=a])";
 
+var rangeCFI = "epubcfi(/6/4[chap01ref]!/4[body01]/10[para05],/3:2,/3:8)";
+
 var preTest = "epubcfi(/1/2:3[pre,post)";
 
-var cfi = new CFI(testCFI2);
+var cfi = new CFI(rangeCFI);
+var parts = cfi.get();
+
+
 for(let part of cfi.parts) {
   console.log("part:");
   for(let subpart of part) {
     console.log("  subpart:", subpart);
   }
+}
+if(cfi.from) {
+  console.log("from part:");
+  for(let subpart of cfi.from) {
+    console.log("  subpart:", subpart);
+  }
+//  console.log(JSON.stringify(cfi.get().from, null, 2));
+}
+
+if(cfi.to) {
+  console.log("to part:");
+  for(let subpart of cfi.to) {
+    console.log("  subpart:", subpart);
+  }
+//  console.log(JSON.stringify(cfi.get().to, null, 2));
 }
 
 
@@ -25,7 +45,7 @@ function parseDOM(str, mimetype) {
 }
 
 
-var cfi = new CFI(testCFI2);
+var cfi = new CFI(rangeCFI);
 
 var opfDOM = parseDOM(docs.opf, 'text/xml');
 
@@ -42,5 +62,5 @@ var bookmark = cfi.resolve(chap1DOM, {
 });
 
 console.log("bookmark:", bookmark);
-console.log("text:", bookmark.node.textContent.slice(bookmark.offset));
+
 

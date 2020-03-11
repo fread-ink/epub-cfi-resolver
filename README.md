@@ -15,8 +15,11 @@ Remember to unescape the URI first, then:
 ```
 var CFI = require('CFI');
 
-var cfi = new CFI('epubcfi(/1/2!/1/2/3:4'); // parsing
-console.log(cfi.parts); // print parsed data
+// parsing
+var cfi = new CFI('epubcfi(/1/2!/1/2/3:4', {
+  flattenRange: false // default is false
+}); 
+console.log(cfi.get()); // print parsed data
 ```
 
 To resolve the CFI, assuming `doc` contains a `Document` or `XMLDocument` object for the starting document:
@@ -32,7 +35,9 @@ var parser = new DOMParser();
 var doc2 = parser.parseFromString(data, 'text/html');
 
 // Resolve final part of CFI to a bookmark
-var bookmark = cfi.resolve(doc2);
+var bookmark = cfi.resolve(doc2, {
+  range: false // default is false
+});
 
 // bookmark contains:
 {
@@ -86,11 +91,45 @@ The parser will output:
 ]
 ```
 
+If the CFI is a Range then it will output:
+
+```
+{
+  from: ...
+  to: ...
+  isRange: true
+}
+```
+
+Where `from` and `to` each are objects with `nodeIndex` etc. like the one shown above.
+
+If the CFI is a Range and `flattenRange: true` is given to the constructor then the output will be the location of the beginning of the range as normal non-range output.
+
 # Resolver output
 
-The resolve will output an object with a `.node` containing a reference to the node pointed to by the CFI and any additional properties from the parser relevant to position _within_ the node, e.g. `.offset`. See previous section for all possible properties.
+If the CFI is not a range, the resolver will output an object with a `.node` containing a reference to the node pointed to by the CFI and any additional properties from the parser relevant to position _within_ the node, e.g. `.offset`. See previous section for all possible properties.
 
-Lastly, the property `.relativeToNode` will be present if the CFI location was _before_ or _after_ a node (rather than _at_ or _inside_ a node). `.relativeToNode` can have the values "before" or "after".
+In addition, the property `.relativeToNode` will be present if the CFI location was _before_ or _after_ a node (rather than _at_ or _inside_ a node). `.relativeToNode` can have the values "before" or "after".
+
+If the CFI is a range then the output will be:
+
+```
+{
+  from: {
+    node: ...
+    offset: ...
+    ...
+  },
+  to: {
+    node: ...
+    offset: ...
+    ...
+  },
+  isRange: true
+}
+```
+
+unless the option `range: true` is given to the `.resolve()` function, in which case the output will be a proper [Range](https://developer.mozilla.org/en-US/docs/Web/API/Range) object.
 
 # Example
 
@@ -128,29 +167,7 @@ Run using: `npm run test`
 
 ## Parser
 
-Supported:
-
-* Step Reference to Child Element or Character Data (/)
-* XML ID Assertion ([)
-* Step Indirection (!)
-* Character Offset (:)
-* Temporal Offset (~)
-* Spatial Offset (@)
-* Temporal-Spatial Offset (~ + @)
-* Text Location Assertion ([)
-* Side Bias ([ + ;s=)
-
-Not supported:
-
-* XML/HTML entitites
-* Simple Ranges
-* Sorting CFIs
-
-Current XML/HTML entitites are not decoded. This can result in the offset into text nodes being offset by some amount in some rare edge cases.
-
-Simple Ranges are not fully supported. They are parsed as the beginning location of the range. That is, for triples like <prefix>,<range-start>,<range-end> they are parsed as <prefix><range-start>.
-
-Sorting CFIs, which is the same as computing their relative locations, is defined by the official spec but does not seem like a terribly useful feature. When do you ever have the need to sort a set of links by how deeply into a target document they link?
+Sorting CFIs, which is the same as computing their relative locations, is defined by the official spec but not supported by this library. It's unclear to the author when this feature would be useful.
 
 ## Resolver
 
@@ -184,10 +201,7 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 # ToDo
 
-* Implement proper parsing of Simple Ranges
 * Correct offsets using Text Location Assertions when possible
-* Support built-in entitry replacement, e.g. using [this npm module](https://www.npmjs.com/package/entities)
-* Support [custom entity replacement](https://www.w3.org/TR/2008/REC-xml-20081126/#intern-replacement)
 * Implement CFI generator
 * Unit tests for bad data / stuff that should fail
 
@@ -197,14 +211,14 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 Pros of using this project over readium-cfi-js:
 
-* ~13 kB vs. ~400 kB dist file (both numbers for un-minified js)
+* ~16 kB vs. ~400 kB dist file (both numbers for un-minified js)
 * Documented usage and example code vs. no documentation on usage
 * No dependencies vs. depends on jquery and lodash
 * Works with node.js vs. requires browser
 
 Pros of using readium-cfi-js over this project:
 
-* Supports all features fully vs. supports most features
+* Supports all features (I think) vs. supports most features
 * Older more mature project vs. newer unproven codebase
 * Includes ability to generate CFIs from node references and offsets
 * Has more unit tests
@@ -221,7 +235,7 @@ Just from a quick glance at the code it's clear that this implementation will fa
 
 # License and copyright
 
-*License: AGPLv3
-*Copyright 2020 Marc Juul Christoffersen 
+* License: AGPLv3
+* Copyright 2020 Marc Juul Christoffersen 
 
 
