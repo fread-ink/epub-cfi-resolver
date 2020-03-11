@@ -56,9 +56,11 @@ You can then use e.g. `bookmark.node.scrollTo()` or some other method to show th
 
 # API
 
-## new CFI(str, opts)
+## new CFI(uri, opts)
 
-Parse the CFI contained in `str` and create a CFI object. An error will be thrown if parsing failes.
+Parse the CFI string contained in `uri` and create a CFI object. An error will be thrown if parsing failes.
+
+If `uri` contains URI Escape Sequences then it should be unescaped using e.g. `decodeURIComponent()` before being handed to the constructor. 
 
 Opts:
 
