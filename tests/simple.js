@@ -320,6 +320,46 @@ var tests = [
       },
       "isRange": true
     }
+  }, {
+    cfi: "epubcfi(/6/4[chap01ref]!/4[body01]/10[para05]/3:3[34,67])",
+    parsed: [
+      [
+        {
+          "nodeIndex": 6
+        },
+        {
+          "nodeIndex": 4,
+          "nodeID": "chap01ref"
+        }
+      ],
+      [
+        {
+          "nodeIndex": 4,
+          "nodeID": "body01"
+        },
+        {
+          "nodeIndex": 10,
+          "nodeID": "para05"
+        },
+        {
+          "nodeIndex": 3,
+          "offset": 3,
+          "textLocationAssertion": {
+            "pre": "34",
+            "post": "67"
+          }
+        }
+      ]
+    ],
+    resolvedURI: "chapter01.xhtml",
+    resolved: {
+      "node": "0123456789",
+      "offset": 5,
+      "textLocationAssertion": {
+        "pre": "34",
+        "post": "67"
+      }
+    }
   }
 ];
 
@@ -332,22 +372,6 @@ for(let test of tests) {
   
 const opfDOM = parseDOM(docs.opf, 'application/xhtml+xml');
 const htmlDOM = parseDOM(docs.html, 'application/xhtml+xml');
-
-function getRangeContents(range) {
-  const documentFragment = range.cloneContents();
-  console.log('aaaaaaaaaaaaaaa', range.toString());
-  var children = documentFragment.childNodes;
-  var data = '';
-  for(let child of children) {
-    console.log("CHILD:", child);
-    if(child.outerHTML) {
-      data += child.outerHTML;
-    } else if(child.textContent) {
-      data += child.textContent;
-    }
-  }
-  return data;
-}
 
 tape('Simple tests', function(t) {
   

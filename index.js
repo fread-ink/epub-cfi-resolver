@@ -82,11 +82,21 @@ class CFI {
     }
   }
 
+  decodeEntities(dom, str) {
+    try {
+      const el = dom.createElement('textarea');
+      el.innerHTML = str;
+      return el.value
+    } catch(err) {
+      // TODO fall back to simpler decode?
+      // e.g. regex match for stuff like &#160; and &nbsp;
+      return str; 
+    }
+  }
+  
   // decode HTML/XML entities and compute length
   trueLength(dom, str) {
-    const el = dom.createElement('textarea');
-    el.innerHTML = str;
-    return el.value.length;
+    return this.decodeEntities(dom, str);
   }
   
   getFrom() {
@@ -441,14 +451,83 @@ class CFI {
       } else {
         o.node = lastChild;
       }
-      if(o.node.nodeType === TEXT_NODE || o.node.nodeType === CDATA_SECTION_NODE) {
+      if(this.isTextNode(o.node)) {
         o.offset = this.trueLength(dom, o.node.textContent.length);
       }
       return o;
-    }
-    
+    }  
   }
 
+  isTextNode(node) {
+    if(!node) return false;
+    if(node.nodeType === TEXT_NODE || node.nodeType === CDATA_SECTION_NODE) {
+      return true;
+    }
+    return false;
+  }
+    
+  // Use a Text Location Assertion to correct and offset
+  correctOffset(dom, node, offset, assertion) {
+    var curNode = node;
+
+    if(typeof assertion === 'string') {
+      var matchStr = this.decodeEntities(dom, assertion);
+    } else {
+      assertion.pre = this.decodeEntities(dom, assertion.pre);
+      assertion.post = this.decodeEntities(dom, assertion.post);
+      var matchStr = assertion.pre + '.' + assertion.post;
+    }
+
+    if(!(this.isTextNode(node))) {
+      return {node, offset: 0};
+    }
+    
+    while(this.isTextNode(curNode.previousSibling)) {
+      curNode = curNode.previousSibling;
+    }
+
+    const startNode = curNode;
+    var str;
+    const nodeLengths = [];
+    var txt = '';
+    var i = 0;
+    while(this.isTextNode(curNode)) {
+
+      str = this.decodeEntities(dom, curNode.textContent);
+      nodeLengths[i] = str.length;
+      txt += str;
+      
+      if(!curNode.nextSibling) break;
+      curNode = curNode.nextSibling;
+      i++;
+    }
+
+    const m = txt.match(new RegExp(matchStr));
+    if(!m) return {node, offset};
+    var newOffset = m.index;
+    
+    if(assertion.pre) {
+      newOffset += assertion.pre.length;
+    }
+    if(curNode === node && newOffset === offset) {
+      return {node, offset};
+    }
+
+    i = 0;
+    curNode = startNode;
+    while(newOffset >= nodeLengths[i]) {
+
+      newOffset -= nodeLengths[i];
+      if(newOffset < 0) return {node, offset}
+
+      if(!curNode.nextSibling || i+1 >= nodeOffsets.length) return {node, offset}
+      i++;
+      curNode = curNode.nextSibling;
+    }
+
+    return {node: curNode, offset: newOffset};
+  }
+  
   resolveNode(index, subparts, dom, opts) {
     opts = Object.assign({}, opts || {});
     if(!dom) throw new Error("Missing DOM argument");
@@ -492,6 +571,10 @@ class CFI {
       subpart = subparts[i];
 
       o = this.getChildNodeByCFIIndex(dom, o.node, subpart.nodeIndex, subpart.offset);
+
+      if(subpart.textLocationAssertion) {
+        o = this.correctOffset(dom, o.node, subpart.offset, subpart.textLocationAssertion);
+      }
     }
     
     return o;

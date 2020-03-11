@@ -1,6 +1,5 @@
 A simple parser and resolver for the [EPUB-CFI](http://idpf.org/epub/linking/cfi/epub-cfi.html) format.
 
-
 # Usage
 
 To install:
@@ -209,7 +208,7 @@ Sorting CFIs, which is the same as computing their relative locations, is define
 
 ## Resolver
 
-The resolver only finds the relevant node and hands off any relevant information from the parser (e.g. offset into a text node). Currently the resolver prefers node ID over child index number when locating nodes (if both are present) and completely ignores Text Location Assertions in favor of the offset number. 
+The resolver only finds the relevant node, corrects the offset if necessary and hands off any other information from the parser (e.g. sideBias). Currently the resolver prefers node ID over child index number when locating nodes (if both are present). Text Location Assertions are used to correct offsets into text nodes if possible.
 
 # About EPUB-CFI
 
@@ -239,7 +238,6 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 # ToDo
 
-* Correct offsets using Text Location Assertions when possible
 * Implement CFI generator
 * Unit tests for bad data / stuff that should fail
 
@@ -249,14 +247,13 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 Pros of using this project over readium-cfi-js:
 
-* ~16 kB vs. ~400 kB dist file (both numbers for un-minified js)
+* ~20 kB vs. ~400 kB dist file (both numbers for un-minified js)
 * Documented usage and example code vs. no documentation on usage
 * No dependencies vs. depends on jquery and lodash
 * Works with node.js vs. requires browser
 
 Pros of using readium-cfi-js over this project:
 
-* Supports all features (I think) vs. supports most features
 * Older more mature project vs. newer unproven codebase
 * Includes ability to generate CFIs from node references and offsets
 * Has more unit tests
