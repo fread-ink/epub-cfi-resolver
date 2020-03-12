@@ -16,6 +16,39 @@ function cfiEscape(str) {
   return str;
 }
 
+// Get indices of all matches of regExp in str
+// if `add` is non-null, add it to the matched indices
+function matchAll(str, regExp, add) {
+  add = add || 0;
+  var matches = [];
+  var offset = 0;
+  var m;
+  do {
+    m = str.match(regExp);
+    if(!m) break
+    matches.push(m.index + add);
+    offset += m.index + m.length;
+    str = str.slice(m.index + m.length);
+  } while(offset < str.length);
+
+  return matches;
+}
+
+// Get the number in a that has the smallest diff to n
+function closest(a, n) {
+  var minDiff;
+  var closest;
+  var i, diff;
+  for(i=0; i < a.length; i++) {
+    diff = Math.abs(a[i] - n);
+    if(!i || diff < minDiff) {
+      diff = minDiff;
+      closest = a[i];
+    }
+  }
+  return closest;
+}
+
 class CFI {
 
   constructor(str, opts) {
@@ -503,7 +536,7 @@ class CFI {
     }
     return false;
   }
-    
+
   // Use a Text Location Assertion to correct and offset
   correctOffset(dom, node, offset, assertion) {
     var curNode = node;
@@ -540,13 +573,14 @@ class CFI {
       i++;
     }
 
-    const m = txt.match(new RegExp(matchStr));
-    if(!m) return {node, offset};
-    var newOffset = m.index;
+    // Find all matches to the Text Location Assertion
+    const matchOffset = (assertion.pre) ? assertion.pre.length : 0;
+    const m = matchAll(txt, new RegExp(matchStr), matchOffset);
+    if(!m.length) return {node, offset};
     
-    if(assertion.pre) {
-      newOffset += assertion.pre.length;
-    }
+    // Get the match that has the closest offset to the existing offset
+    var newOffset = closest(m, offset);
+    
     if(curNode === node && newOffset === offset) {
       return {node, offset};
     }
