@@ -12,8 +12,7 @@ if(typeof Node === 'undefined') {
 }
 
 function cfiEscape(str) {
-  // TODO implement
-  return str;
+  return str.replace(/[\[\]\^,();]/g, "^$&");
 }
 
 // Get indices of all matches of regExp in str
@@ -48,6 +47,49 @@ function closest(a, n) {
   }
   return closest;
 }
+
+// Given a set of nodes that are all children
+// and a reference to one of those nodes
+// calculate the count/index of the node
+// according to the CFI spec
+function calcSiblingCount(nodes, n, offset) {
+  var count = 0;
+  var lastWasElement;
+  var prevOffset = 0;
+  var i, node;
+  for(i=0; i < nodes.length; i++) {
+    node = nodes[i];
+    if(node.nodeType === ELEMENT_NODE) {
+      if(lastWasElement || !i) {
+        count += 2;
+      } else {
+        count++;
+      }
+      if(n === node) {
+        return {count};
+      }
+      prevOffset = 0;
+      lastWasElement = true;
+    } else if (node.nodeType === TEXT_NODE ||
+               node.nodeType === CDATA_SECTION_NODE) {
+
+      if(lastWasElement || !i) {
+        count++
+      }
+      
+      if(n === node) {
+        return {count, offset: offset + prevOffset};
+      }
+
+      prevOffset += node.textContent.length;
+      lastWasElement = false;
+    } else {
+      continue;
+    }
+  }
+  throw new Error("The specified node was not found in the array of siblings");
+}
+
 
 class CFI {
 
@@ -120,32 +162,19 @@ class CFI {
     }
   }
   
-  // TODO complete this
   static generate(node, offset, extra) {
-
+    
     var cfi = '';
-    var id = node.id;
-    var childCount = 1;
-    while(true) {
+    var o;
+    while(node.parentNode) {
+      o = calcSiblingCount(node.parentNode.childNodes, node, offset);
+      if(!cfi && o.offset) cfi = ':'+o.offset;
       
-      if(node.previousSibling) {
-        // TODO fix counts so they follow the CFI standard
-        node = node.previousSibling;
-        childCount++;
-      } else if(node.parentNode) {
-        // TODO cfiEscape currently does nothing
-        cfi = '/'+childCount+((id) ? '['+cfiEscape(id)+']' : '') + cfi;
-        id = null;
-        childCount = 1;
-        node = node.parentNode;
-      } else {
-        break;
-      }
+      cfi = '/'+o.count+((node.id) ? '['+cfiEscape(node.id)+']' : '') + cfi;
+      
+      node = node.parentNode;
     }
-    // TODO recalculate offset to account for multiple adjacent text nodes
-    if(offset) {
-      cfi = cfi + ':'+offset;
-    }
+    
     if(extra) {
       cfi = cfi + extra;
     }
@@ -167,7 +196,7 @@ class CFI {
   
   // decode HTML/XML entities and compute length
   trueLength(dom, str) {
-    return this.decodeEntities(dom, str);
+    return this.decodeEntities(dom, str).length;
   }
   
   getFrom() {
@@ -500,6 +529,7 @@ class CFI {
           // then we assume that the next node will also be a text node
           // and that we'll be combining them with the current node
           let trueLength = this.trueLength(dom, child.textContent);
+
           if(offset >= trueLength) {
             offset -= trueLength;
           } else {

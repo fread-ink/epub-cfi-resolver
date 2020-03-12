@@ -1,4 +1,4 @@
-A simple parser and resolver for the [EPUB-CFI](http://idpf.org/epub/linking/cfi/epub-cfi.html) format.
+A simple parser, generator and resolver for the [EPUB-CFI](http://idpf.org/epub/linking/cfi/epub-cfi.html) format.
 
 # Usage
 
@@ -178,6 +178,10 @@ If the CFI is a range then the output will be:
 
 unless the option `range: true` is given, in which case the output will be a proper [Range](https://developer.mozilla.org/en-US/docs/Web/API/Range) object.
 
+## CFI.generate(node, offset, extra)
+
+Generate a CFI string for a `node` reference and optional `offset` into a text node. The offset will be adjusted to conform to the CFI specification if needed. If present the `extra` string will be appended at the end of the CFI before the closing bracket.
+
 # Example
 
 To build the example:
@@ -248,7 +252,7 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 # ToDo
 
-* Complete the CFI generator
+* Unit tests for generator
 * Unit tests for bad data / stuff that should fail
 
 # Other similar projects
@@ -257,7 +261,7 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 Pros of using this project over readium-cfi-js:
 
-* ~20 kB vs. ~400 kB dist file (both numbers are for un-minified js)
+* ~21 kB vs. ~400 kB dist file (both numbers are for un-minified js)
 * Documented usage and example code vs. no documentation on usage
 * No dependencies vs. depends on jquery and lodash
 * Works with node.js vs. requires browser
@@ -265,7 +269,6 @@ Pros of using this project over readium-cfi-js:
 Pros of using readium-cfi-js over this project:
 
 * Older more mature project vs. newer unproven codebase
-* Includes ability to generate CFIs from node references and offsets
 * Has more unit tests
 
 Other differences. This project vs. readium-cfi-js:

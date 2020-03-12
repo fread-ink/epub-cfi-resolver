@@ -64,8 +64,15 @@ var bookmark = cfi.resolve(chap1DOM, {
 console.log("bookmark:", bookmark);
 
 
-
-var el = chap1DOM.querySelector('#para05');
+var el = chap1DOM.querySelector('#para05').lastChild;
 
 var c = CFI.generate(el, 0);
 console.log("Generated:", c);
+
+cfi = new CFI(c);
+
+bookmark = cfi.resolve(chap1DOM, {
+  ignoreIDs: true
+});
+
+console.log("Resolved from generated:", bookmark, bookmark.node, bookmark.node.previousSibling);
