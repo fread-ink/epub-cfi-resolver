@@ -56,15 +56,18 @@ function calcSiblingCount(nodes, n, offset) {
   var count = 0;
   var lastWasElement;
   var prevOffset = 0;
+  var firstNode = true;
   var i, node;
   for(i=0; i < nodes.length; i++) {
     node = nodes[i];
     if(node.nodeType === ELEMENT_NODE) {
-      if(lastWasElement || !i) {
+      if(lastWasElement || firstNode) {
         count += 2;
+        firstNode = false;
       } else {
         count++;
       }
+      
       if(n === node) {
         return {count};
       }
@@ -72,9 +75,9 @@ function calcSiblingCount(nodes, n, offset) {
       lastWasElement = true;
     } else if (node.nodeType === TEXT_NODE ||
                node.nodeType === CDATA_SECTION_NODE) {
-
-      if(lastWasElement || !i) {
-        count++
+      if(lastWasElement || firstNode) {
+        count++;
+        firstNode = false;
       }
       
       if(n === node) {

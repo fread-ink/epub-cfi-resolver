@@ -1,4 +1,4 @@
-A simple parser, generator and resolver for the [EPUB-CFI](http://idpf.org/epub/linking/cfi/epub-cfi.html) format.
+A simple parser, resolver and generator for the [EPUB-CFI](http://idpf.org/epub/linking/cfi/epub-cfi.html) format.
 
 # Usage
 
