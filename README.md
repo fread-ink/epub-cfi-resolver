@@ -14,7 +14,7 @@ Remember to unescape the URI first, then:
 var CFI = require('epub-cfi-resolver');
 
 // parsing
-var cfi = new CFI('epubcfi(/1/2!/1/2/3:4', {
+var cfi = new CFI('epubcfi(/1/2!/1/2/3:4)', {
   flattenRange: false // default is false
 }); 
 console.log(cfi.get()); // print parsed data
@@ -111,8 +111,8 @@ The parser will output:
       "sideBias": "before",
       "temporal": 3.14,
       "spatial": {
-        "from": 4,
-        "to": 2
+        "x": 4,
+        "y": 2
       }
     }
   ]
@@ -156,6 +156,8 @@ If the CFI is not a range, the resolver will output an object like:
 ```
 including any additional properties from the parser relevant to position _within_ the node, e.g. `.sideBias`. See section on `.get()`.
 
+Note that the returned `offset` may be adjusted from the one given in the CFI. This is because the CFI standard specifies that adjacents text and CDATA nodes should be treated as single nodes and the resolver translates from the CFI way of counting to the one used by the DOM standard.
+
 In addition, the property `.relativeToNode` will be present if the CFI location was _before_ or _after_ a node (rather than _at_ or _inside_ a node). `.relativeToNode` can have the values "before" or "after".
 
 If the CFI is a range then the output will be:
@@ -182,6 +184,22 @@ unless the option `range: true` is given, in which case the output will be a pro
 
 Generate a CFI string for a `node` reference and optional `offset` into a text node. The offset will be adjusted to conform to the CFI specification if needed. If present the `extra` string will be appended at the end of the CFI before the closing bracket.
 
+## CFI.comparePart(a, b)
+
+Takes two parsed path parts and compares them, e.g:
+
+```
+const a = new CFI("epubcfi(/1/4/4~5)").get()[0];
+const b = new CFI("epubcfi(/1/2/4~2.3)").get()[0];
+
+const diff = CFI.compareParts(a, b);
+```
+
+* If `a` comes first in the document then a value < 0 is returned
+* If `b` comes first in the document then a value > 0 is returned
+* If they are equal then 0 is returned
+
+If either CFI is a range only the beginning of the range is used for comparison.
 # Example
 
 To build the example:
@@ -218,7 +236,7 @@ Run using: `npm run test`
 
 ## Parser
 
-Sorting CFIs, which is the same as computing their relative locations, is defined by the official spec but not supported by this library. It's unclear to the author when this feature would be useful.
+Sorting CFIs, which is the same as computing their relative locations, is defined by the official spec but not supported by this library.
 
 ## Resolver
 
@@ -252,7 +270,12 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 # ToDo
 
-* Unit tests for generator
+* Implement :offset for <img alt="text"> elements
+* If encountering offset, spatial or temporal after already having seen one of those, stop parsing
+* If not last subpart, disregard offset, spatial, temporal, sideBias and text location assertion
+* Finish implementing compare/sort
+* Unit tests for compare
+* More unit tests for generator
 * Unit tests for bad data / stuff that should fail
 
 # Other similar projects
@@ -261,13 +284,14 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 Pros of using this project over readium-cfi-js:
 
-* ~21 kB vs. ~400 kB dist file (both numbers are for un-minified js)
+* ~23 kB vs. ~400 kB dist file (both numbers are for un-minified js)
 * Documented usage and example code vs. no documentation on usage
 * No dependencies vs. depends on jquery and lodash
 * Works with node.js vs. requires browser
 
 Pros of using readium-cfi-js over this project:
 
+* Supports sorting CFIs
 * Older more mature project vs. newer unproven codebase
 * Has more unit tests
 
@@ -279,7 +303,7 @@ Other differences. This project vs. readium-cfi-js:
 
 ## [epubcfi from epub.js](https://github.com/futurepress/epub.js/blob/master/src/epubcfi.js)
 
-Just from a quick glance at the code it's clear that this implementation will fail in several likely real world scenarios since it uses simple `.split()` calls on characters that can have several meanings depending on where they appear, e.g. '!' and '/' can appear in element `id=` attributes as well as Text Location Assertions but this is not taken into account, neither is the '^' escape character handled at all.
+Just from a quick glance at the code it's clear that this implementation will fail in several likely real world scenarios since it uses simple `.split()` calls on characters that can have several meanings depending on where they appear, e.g. '!' and '/' can appear in element `id=` attributes as well as Text Location Assertions but this is not taken into account.
 
 # License and copyright
 

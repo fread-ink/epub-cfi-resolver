@@ -147,8 +147,8 @@ var tests = [
           "sideBias": "before",
           "temporal": 3.4,
           "spatial": {
-            "from": 1,
-            "to": 2
+            "x": 1,
+            "y": 2
           }
         }
       ]

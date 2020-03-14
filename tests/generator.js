@@ -29,7 +29,6 @@ const badDOM = parseDOM(badDoc, 'text/html');
 function generateAndCompare(t, dom, node, offset, cfi) {
 
   var c = CFI.generate(node, 5);
-  console.log("CFI:", c);
   
   t.equal(c, cfi);
          
@@ -62,9 +61,9 @@ tape('Generator', function(t) {
   
   generateAndCompare(t, nwHtmlDOM, node, 5, cfiStr)
 
-  cfiStr = 'epubcfi(/2/4/2[!/^[^]^,^;]/2/4[!/foo^[^]]/1:10)';
+  cfiStr = 'epubcfi(/2/4/2[!/^[^]^,^;]/2/4[!/foo^^^[^]]/1:10)';
   
-  node = badDOM.getElementById('!/foo[]').lastChild;
+  node = badDOM.getElementById('!/foo^[]').lastChild;
   
   generateAndCompare(t, badDOM, node, 1, cfiStr);
 });

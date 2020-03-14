@@ -93,6 +93,27 @@ function calcSiblingCount(nodes, n, offset) {
   throw new Error("The specified node was not found in the array of siblings");
 }
 
+function compareTemporal(a, b) {
+  const isA = (typeof a === 'number');
+  const isB = (typeof b === 'number');
+
+  if(!isA && !isB) return 0;
+  if(!isA && isB) return -1;
+  if(isA && !isB) return 1;
+  
+  return (a || 0.0) - (b || 0.0);
+}
+
+function compareSpatial(a, b) {
+  if(!a && !b) return 0;
+  if(!a && b) return -1;
+  if(a && !b) return 1;
+
+  var diff = (a.y || 0) - (b.y || 0);
+  if(diff) return diff;
+
+  return (a.x || 0) - (b.x || 0);
+}
 
 class CFI {
 
@@ -184,6 +205,66 @@ class CFI {
     
     return 'epubcfi('+cfi+')';
   }
+
+  static toParsed(cfi) {
+    if(typeof cfi === 'string') cif = new this(cfi);
+    if(cfi.isRange) {
+      return cfi.getFrom();
+    } else {
+      return cfi.get();
+    }
+  }
+  
+  static compare(a, b, uriCompFunc) {
+    // TODO implement a way to resolve URIs to the final URI
+    // and compare them using uriCompFunc
+  }
+
+  // Takes two parsed path parts (assuming path is split on '!') and compares them.
+  // If `a` comes first in the document then a value < 0 is returned
+  // If `b` comes first in the document then a value > 0 is returned
+  // If they are equal then 0 is returned
+  static compareParts(a, b) {
+    const max = Math.max(a.length, b.length);
+    
+    var i, cA, cB, diff;
+    for(i=0; i < max; i++) {
+      cA = a[i];
+      cB = b[i];
+      if(!cA) return -1;
+      if(!cB) return 1;
+      
+      diff = cA.nodeIndex - cB.nodeIndex;
+      if(diff) return diff;
+
+      // The paths must be equal if the "before the first node" syntax is used
+      // and this must be the last subpart (assuming a valid CFI)
+      if(cA.nodeIndex === 0) {
+        return 0;
+      }
+      
+      // Don't bother comparing offsets, temporals or spatials
+      // unless we're on the last element, since they're not
+      // supposed to be on elements other than the last
+      if(i < max - 1) continue;
+      
+      // Only compare spatials or temporals for element nodes
+      if(cA.nodeIndex % 2 === 0) {
+        
+        diff = compareTemporal(cA.temporal, cB.temporal);
+        if(diff) return diff;
+        
+        diff = compareSpatial(cA.spatial, cB.spatial);
+        if(diff) return diff;
+        
+      } else { // only compare offsets for text nodes
+
+        diff = (cA.offset || 0) - (cB.offset || 0);
+        if(diff) return diff;
+      }
+    }
+    return 0;
+  }
   
   decodeEntities(dom, str) {
     try {
@@ -261,10 +342,10 @@ class CFI {
     const m = range.trim().match(/^([\d\.]+):([\d\.]+)$/);
     if(!m || m.length < 3) return undefined;
     const o = {
-      from: parseInt(m[1]),
-      to: parseInt(m[2]),
+      x: parseInt(m[1]),
+      y: parseInt(m[2]),
     };
-    if(typeof o.from !== 'number' || typeof o.to !== 'number') {
+    if(typeof o.x !== 'number' || typeof o.y !== 'number') {
       return undefined;
     }
     return o;

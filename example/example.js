@@ -63,7 +63,6 @@ var bookmark = cfi.resolve(chap1DOM, {
 
 console.log("bookmark:", bookmark);
 
-
 var el = chap1DOM.querySelector('#para05').lastChild;
 
 var c = CFI.generate(el, 0);
@@ -76,3 +75,8 @@ bookmark = cfi.resolve(chap1DOM, {
 });
 
 console.log("Resolved from generated:", bookmark, bookmark.node, bookmark.node.previousSibling);
+
+const a = new CFI("epubcfi(/1/4/4~5)").get()[0];
+const b = new CFI("epubcfi(/1/2/4~2.3)").get()[0];
+
+console.log("Diff:", CFI.compareParts(a, b));
