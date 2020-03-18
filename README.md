@@ -215,6 +215,18 @@ If `fetchCB` is not supplied, then a built in function will be used which relies
 
 Static function to generate a CFI string for a `node` reference and optional `offset` into a text node. The offset will be adjusted to conform to the CFI specification if needed. If present the `extra` string will be appended at the end of the CFI before the closing bracket.
 
+Also see alternate calling convention below
+
+## CFI.generate(<array>, extra)
+
+Same as CFI.generate(node, offset, extra) except takes an array of objects containing `{node: <nodeRef>, offset: <number>}` pairs and outputs a CFI that includes `!` indirection steps, assuming the array has more than one entry.
+
+## CFI.sort(<array of CFI objects>)
+
+Sort-in-place an array of CFI objects based on when they appear in the document.
+
+Based on `CFI.compare()`. Note that this is based on parsing the CFI strings only. No resolving is done by `.sort()`.
+
 ## CFI.compare(a, b)
 
 Static function that compares two CFI objects, e.g:
@@ -277,16 +289,6 @@ The `doc` variable will contain a `Document` equivalent to the output from the b
 
 Run using: `npm run test`
 
-# Supported features
-
-## Parser
-
-Sorting CFIs, which is the same as computing their relative locations, is defined by the official spec but not supported by this library.
-
-## Resolver
-
-The resolver only finds the relevant node, corrects the offset if necessary and hands off any other information from the parser (e.g. sideBias). Currently the resolver prefers node ID over child index number when locating nodes (if both are present). Text Location Assertions are used to correct offsets into text nodes if possible.
-
 # About EPUB-CFI
 
 A [CFI](http://idpf.org/epub/linking/cfi/epub-cfi.html), or Canonical Fragment Identifier, is like a more complicated `#anchor` as used in HTML `href=` attributes. Think of them as ebook bookmarks. You'd encounter them like so:
@@ -327,8 +329,9 @@ which is useful for specifying highlighted text in an ebook.
 
 # ToDo
 
-* More unit tests for generator
-* Unit tests for bad data / stuff that should fail
+* Add option for generator to generate Text Location Assertions
+* Implement options (e.g. spatial and temporal) for generator
+* Add unit tests for expected-to-fail data for resolver
 
 # Other similar projects
 
@@ -343,7 +346,6 @@ Pros of using this project over readium-cfi-js:
 
 Pros of using readium-cfi-js over this project:
 
-* Supports sorting CFIs
 * Older more mature project vs. newer unproven codebase
 * Has more unit tests
 

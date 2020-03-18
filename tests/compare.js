@@ -1,6 +1,6 @@
 'use strict';
 
-const debug = true; // Enable debug output?
+const debug = false; // Enable debug output?
 
 var tape = require('tape');
 var CFI = require('../index.js');
@@ -45,18 +45,18 @@ const toCompare = [
     result: -1
   },
   { // Temporal and spatial should be ignored on character (text/cdata) nodes 
-    a: "epubcfi(/2/4!/6[bar]/44!/3:~1.11@1:1)",
-    b: "epubcfi(/2/4!/6[bar]/44!/3:~2.22@2:2)",
+    a: "epubcfi(/2/4!/6[bar]/44!/3~1.11@1:1)",
+    b: "epubcfi(/2/4!/6[bar]/44!/3~2.22@2:2)",
     result: 0
   },
   { // Test spatial+temporal comparison
-    a: "epubcfi(/2/4!/6[bar]/44!/4:~1.11@1:1)",
-    b: "epubcfi(/2/4!/6[bar]/44!/4:~2.22@2:2)",
+    a: "epubcfi(/2/4!/6[bar]/44!/4~1.11@1:1)",
+    b: "epubcfi(/2/4!/6[bar]/44!/4~2.22@2:2)",
     result: -1
   },
   { // Test that spatial has precedence over temporal
-    a: "epubcfi(/2/4!/6[bar]/44!/4:~2.22@1:1)",
-    b: "epubcfi(/2/4!/6[bar]/44!/4:~1.11@2:2)",
+    a: "epubcfi(/2/4!/6[bar]/44!/4~2.22@1:1)",
+    b: "epubcfi(/2/4!/6[bar]/44!/4~1.11@2:2)",
     result: 1
   },
   { // Compare two identical ranges
@@ -93,7 +93,7 @@ const toCompare = [
 
 tape('Compare', function(t) {
 
-  t.plan(toCompare.length);
+  t.plan(toCompare.length + 4);
 
   var i, test, res;
   for(i=0; i < toCompare.length; i++) {
@@ -110,8 +110,21 @@ tape('Compare', function(t) {
     if(res < 0) res = -1;
     if(res > 0) res = 1;
     
-    t.equal(res, test.result);
+    t.equal(res, test.result, "Testing comparison of " + test.a + " and " + test.b);
   }
 
+  const no0 = new CFI("epubcfi(/1)");
+  const no1 = new CFI("epubcfi(/2/4!/6[bar]/44!/4:~1.11@1:1)");
+  const no2 = new CFI("epubcfi(/2/4!/6[bar]/44!/4:~2.22@2:2)")
+  const no3 = new CFI("epubcfi(/2/4/99)");
+  
+  var a = [no2, no1, no3, no0];
 
+  CFI.sort(a);
+
+  t.equal(a[0].cfi, no0.cfi, "Testing .sort() 0");
+  t.equal(a[1].cfi, no1.cfi, "Testing .sort() 1");
+  t.equal(a[2].cfi, no2.cfi, "Testing .sort() 2");
+  t.equal(a[3].cfi, no3.cfi, "Testing .sort() 3");
+ 
 });

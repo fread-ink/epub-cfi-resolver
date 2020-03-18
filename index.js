@@ -220,8 +220,8 @@ class CFI {
       }
     }
   }
-  
-  static generate(node, offset, extra) {
+
+  static generatePart(node, offset, extra) {
     
     var cfi = '';
     var o;
@@ -234,9 +234,23 @@ class CFI {
       node = node.parentNode;
     }
     
-    if(extra) {
-      cfi = cfi + extra;
+    return cfi;
+  }
+  
+  static generate(node, offset, extra) {
+    var cfi;
+    
+    if(node instanceof Array) {
+      var strs = [];
+      for(let o of node) {
+        strs.push(this.generatePart(o.node, o.offset));
+      }
+      cfi = strs.join('!');
+    } else {
+      cfi = this.generatePart(node, offset, extra);
     }
+
+    if(extra) cfi += extra;
     
     return 'epubcfi('+cfi+')';
   }
@@ -266,6 +280,13 @@ class CFI {
       if(diff) return diff;
     }
     return 0;
+  }
+
+  // Sort an array of CFI objects
+  static sort(a) {
+    a.sort((a, b) => {
+      return this.compare(a, b)
+    });
   }
   
   // Takes two CFI objects and compares them.

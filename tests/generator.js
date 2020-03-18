@@ -24,11 +24,11 @@ const htmlDOM = parseDOM(docs.html, 'application/xhtml+xml');
 const nwOpfDOM = parseDOM(nwDocs.opf, 'application/xhtml+xml');
 const nwHtmlDOM = parseDOM(nwDocs.html, 'application/xhtml+xml');
 
-const badDOM = parseDOM(badDoc, 'text/html');
+const badDOM = parseDOM(badDoc, 'application/xhtml+xml');
 
 function generateAndCompare(t, dom, node, offset, cfi) {
 
-  var c = CFI.generate(node, 5);
+  var c = CFI.generate(node, offset);
   
   t.equal(c, cfi);
          
@@ -37,19 +37,19 @@ function generateAndCompare(t, dom, node, offset, cfi) {
   var bookmark = cfi.resolve(dom);
 
   t.equal(bookmark.node, node);
-  t.equal(bookmark.offset, 5);
+  t.equal(bookmark.offset, offset);
   
   bookmark = cfi.resolve(dom, {
     ignoreIDs: true
   });
 
   t.equal(bookmark.node, node);
-  t.equal(bookmark.offset, 5);
+  t.equal(bookmark.offset, offset);
 }
 
 tape('Generator', function(t) {
 
-  t.plan(15);
+  t.plan(16);
 
   var cfiStr = 'epubcfi(/2/4[body01]/10[para05]/3:5)';
   
@@ -62,8 +62,19 @@ tape('Generator', function(t) {
   generateAndCompare(t, nwHtmlDOM, node, 5, cfiStr)
 
   cfiStr = 'epubcfi(/2/4/2[!/^[^]^,^;]/2/4[!/foo^^^[^]]/1:10)';
-  
+
   node = badDOM.getElementById('!/foo^[]').lastChild;
   
   generateAndCompare(t, badDOM, node, 1, cfiStr);
+  
+  cfiStr = 'epubcfi(/2/4/6[chapter01]!/2/4[body01]/16[svgimg]:1)';
+  var cfi = new CFI(cfiStr);
+  var a = [
+    { node: opfDOM.getElementById('chapter01')},
+    { node: htmlDOM.getElementById('svgimg'), offset: 1}
+  ];
+  var c = CFI.generate(a);
+  
+  t.equal(c, cfiStr, "Calling generator with array");
+ 
 });
