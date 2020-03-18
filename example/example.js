@@ -2,11 +2,9 @@
 
 var CFI = require('../index.js');
 
-//var docs = require('../test_data/from_spec.js');
+var docs = require('../test_data/from_spec.js');
 //var docs = require('../test_data/no_whitespace.js');
-var docs = require('../test_data/cdata.js');
-
-var testCFI2 = "epubcfi(/6/4[chap01ref]!/4[body01]/10[para05]/3:9[;s=a])";
+//var docs = require('../test_data/cdata.js');
 
 var rangeCFI = "epubcfi(/6/4[chap01ref]!/4[body01]/10[para05],/3:2,/3:8)";
 
@@ -80,3 +78,17 @@ const a = new CFI("epubcfi(/1/4/4~5)").get()[0];
 const b = new CFI("epubcfi(/1/2/4~2.3)").get()[0];
 
 console.log("Diff:", CFI.compareParts(a, b));
+
+async function testAutomaticParsing() {
+
+  var testCFI = "epubcfi(/6/4[chap01ref]!/4[body01]/10[para05]/3:5[;s=a])";
+  
+  cfi = new CFI(testCFI);
+
+  var loc = await cfi.resolveAll('test.opf');
+  
+  console.log("Resolved:", loc, loc.node, loc.node.textContent);
+
+}
+
+testAutomaticParsing()

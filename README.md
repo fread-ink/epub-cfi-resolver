@@ -81,7 +81,7 @@ Return a copy of the parsed data.
 Given this CFI:
 
 ```
-epubcfi(/1/2[node-id]!/3/4:5[pre,post;s=b]~3.14@4:2)
+epubcfi(/2/4[node-id]!/6/7:5[pre,post;s=b])
 ```
 
 The parser will output:
@@ -90,25 +90,46 @@ The parser will output:
 [
   [ // first part of CFI
     {
-      "nodeIndex": 1
+      "nodeIndex": 2
     },
     {
-      "nodeIndex": 2,
+      "nodeIndex": 4,
       "nodeID": "node-id"
     }
   ],
   [ // part after first '!'
     {
-      "nodeIndex": 3
+      "nodeIndex": 6
     },
     {
-      "nodeIndex": 4,
+      "nodeIndex": 7,
       "offset": 5,
       "textLocationAssertion": {
         "pre": "pre",
         "post": "post"
       }
-      "sideBias": "before",
+      "sideBias": "before"
+    }
+  ]
+]
+```
+
+Or an example with temporal and spatial coordinates:
+
+```
+epubcfi(/2/4~3.14@4:2)
+```
+
+outputs:
+
+```
+[
+  [
+    {
+      "nodeIndex": 2
+    },
+    {
+      "nodeIndex": 4,
       "temporal": 3.14,
       "spatial": {
         "x": 4,
@@ -180,13 +201,23 @@ If the CFI is a range then the output will be:
 
 unless the option `range: true` is given, in which case the output will be a proper [Range](https://developer.mozilla.org/en-US/docs/Web/API/Range) object.
 
+## async .resolveAll(uriOrDoc, [fetchCB], [opts])
+
+Resolve an entire CFI, fetching and parsing URIs as they are encountered. If successful returns an object as documented for the `.resolve()` API call.
+
+`uriOrDoc` is the initial URI or Document/XMLDocument object where parsing should begin.
+
+`fetchCB` is an optional async function that takes a URI as its sole argument, retrieves the HTML/XHTML/XML at that URI, parses it into a Document/XMLDocument object and returns it.
+
+If `fetchCB` is not supplied, then a built in function will be used which relies on XMLHTTPRequest.
+
 ## CFI.generate(node, offset, extra)
 
-Generate a CFI string for a `node` reference and optional `offset` into a text node. The offset will be adjusted to conform to the CFI specification if needed. If present the `extra` string will be appended at the end of the CFI before the closing bracket.
+Static function to generate a CFI string for a `node` reference and optional `offset` into a text node. The offset will be adjusted to conform to the CFI specification if needed. If present the `extra` string will be appended at the end of the CFI before the closing bracket.
 
-## CFI.comparePart(a, b)
+## CFI.compareParts(a, b)
 
-Takes two parsed path parts and compares them, e.g:
+Static function that takes two parsed path parts and compares them, e.g:
 
 ```
 const a = new CFI("epubcfi(/1/4/4~5)").get()[0];
@@ -200,6 +231,7 @@ const diff = CFI.compareParts(a, b);
 * If they are equal then 0 is returned
 
 If either CFI is a range only the beginning of the range is used for comparison.
+
 # Example
 
 To build the example:
@@ -270,10 +302,6 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 # ToDo
 
-* Implement :offset for <img alt="text"> elements
-* If encountering offset, spatial or temporal after already having seen one of those, stop parsing
-* If not last subpart, disregard offset, spatial, temporal, sideBias and text location assertion
-* Implement .resolveFinalURI with a callback for fetching and parsing each file
 * Finish implementing compare/sort
 * Unit tests for compare
 * More unit tests for generator
@@ -285,7 +313,7 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 
 Pros of using this project over readium-cfi-js:
 
-* ~23 kB vs. ~400 kB dist file (both numbers are for un-minified js)
+* ~27 kB vs. ~400 kB dist file (both numbers are for un-minified js)
 * Documented usage and example code vs. no documentation on usage
 * No dependencies vs. depends on jquery and lodash
 * Works with node.js vs. requires browser

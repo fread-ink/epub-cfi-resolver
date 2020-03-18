@@ -117,7 +117,7 @@ var tests = [
       ]
     ]
   }, {
-    cfi: "epubcfi(/6/14[cha!/p05ref]!/4[bo!/dy01]/10/2/1[foo]:5:3[don't!/ panic;s=b]~3.4@1:2)",
+    cfi: "epubcfi(/6/14[cha!/p05ref]!/4[bo!/dy01]/10/2/1[foo]:5[don't!/ panic;s=b])",
     parsed: [
       [
         {
@@ -142,14 +142,9 @@ var tests = [
         {
           "nodeIndex": 1,
           "nodeID": "foo",
-          "offset": 3,
+          "offset": 5,
           "textLocationAssertion": "don't!/ panic",
-          "sideBias": "before",
-          "temporal": 3.4,
-          "spatial": {
-            "x": 1,
-            "y": 2
-          }
+          "sideBias": "before"
         }
       ]
     ]
@@ -360,6 +355,64 @@ var tests = [
         "post": "67"
       }
     }
+  }, {
+    cfi: "epubcfi(/6/14[cha!/p05ref]!/4[bo!/dy01]/10/2/1[foo]~42.43@100:101)",
+    parsed: [
+      [
+        {
+          "nodeIndex": 6
+        },
+        {
+          "nodeIndex": 14,
+          "nodeID": "cha!/p05ref"
+        }
+      ],
+      [
+        {
+          "nodeIndex": 4,
+          "nodeID": "bo!/dy01"
+        },
+        {
+          "nodeIndex": 10
+        },
+        {
+          "nodeIndex": 2
+        },
+        {
+          "nodeIndex": 1,
+          "nodeID": "foo",
+          "temporal": 42.43,
+          "spatial": {
+            "x": 100,
+            "y": 101
+          }
+        }
+      ]
+    ]
+  }, { // test that offset and tempora/spatial are ignored on all but last subpart
+    cfi: "epubcfi(/2~42.43@100:101/4!/6/8:100/6:200)",
+    parsed: [
+      [
+        {
+          "nodeIndex": 2
+        },
+        {
+          "nodeIndex": 4
+        }
+      ],
+      [
+        {
+          "nodeIndex": 6
+        },
+        {
+          "nodeIndex": 8
+        },
+        {
+          "nodeIndex": 6,
+          "offset": 200
+        }
+      ]
+    ]
   }
 ];
 

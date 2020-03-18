@@ -126,7 +126,10 @@ class CFI {
     this.opts = Object.assign({
       // If CFI is a Simple Range, pretend it isn't
       // by parsing only the start of the range
-      flattenRange: false 
+      flattenRange: false,
+      // Strip temporal, spatial, offset and textLocationAssertion
+      // from places where they don't make sense
+      stricter: true
     }, opts || {});
     
     this.cfi = str;
@@ -185,9 +188,36 @@ class CFI {
         this.parts = this.parts.concat(this.from);
         delete this.from;
         delete this.to;
-        return;
+      } else {
+        this.isRange = true;
       }
-      this.isRange = true;
+    }
+    if(this.opts.stricter) {
+      this.removeIllegalOpts();
+    }
+  }
+
+  removeIllegalOpts(parts) {
+    if(!parts) {
+      if(this.from) {
+        this.removeIllegalOpts(this.from);
+        if(!this.to) return;
+        parts = this.to;
+      } else {
+        parts = this.parts;
+      }
+    }
+
+    var i, j, part, subpart;
+    for(i=0; i < parts.length; i++) {
+      part = parts[i];
+      for(j=0; j < part.length - 1; j++) {
+        subpart = part[j];
+        delete subpart.temporal;
+        delete subpart.spatial;
+        delete subpart.offset;
+        delete subpart.textLocationAssertion;
+      }
     }
   }
   
@@ -487,6 +517,18 @@ class CFI {
         }
         
         if(cur === ':' || cur === '~' || cur === '@') {
+          if(this.opts.stricter) {
+            // We've already had a temporal or spatial indicator
+            // and offset does not make sense and the same time
+            if(cur === ':' && (typeof o.temporal !== 'undefined' || typeof o.spatial !== 'undefined')) {
+              break;
+            }
+            // We've already had an offset
+            // and temporal or spatial do not make sense at the same time
+            if((cur === '~' || cur === '@') && (typeof o.offset !== 'undefined')) {
+              break;
+            }
+          }
           prevState = state;
           state = cur;
           escape = false;
@@ -862,8 +904,6 @@ class CFI {
   // and returns the node and offset into that node
   resolve(dom, opts) {
     opts = Object.assign({
-      // If true, return a proper DOM Range object
-      // TODO implement
       range: false
     }, opts || {});
     
@@ -900,6 +940,65 @@ class CFI {
       isRange: true
     };
   }
+
+  async fetchAndParse(uri) {
+    return new Promise((resolve, reject) => {
+      
+      const xhr = new XMLHttpRequest;
+      
+      xhr.open('GET', uri);
+      xhr.responseType = 'document';
+      
+      xhr.onload = function() {
+        if(xhr.readyState === xhr.DONE) {
+          if(xhr.status < 200 || xhr.status >= 300) {
+            reject(new Error("Failed to get: " + uri));
+            return;
+        }
+          resolve(xhr.responseXML);
+        }
+      }
+      xhr.onerror = function() {
+        reject(new Error("Failed to get: " + uri));
+      }
+      
+      xhr.send();
+    });
+  }
+  
+  // Resolve an entire CFI
+  // uriOrDoc is the initial URI or Document/XMLDocument object
+  // where parsing should begin.
+  //
+  // fetchCB is an optional async function that takes a URI as its sole argument,
+  // retrieves the HTML/XHTML/XML at that URI, parses it into a
+  // Document/XMLDocument object and returns it.
+  //
+  // If fetchCB is not supplied, then this.fetchAndParse will be used,
+  // which relies on XMLHTTPRequest
+  async resolveAll(uriOrDoc, fetchCB, opts) {
+    if(typeof fetchCB !== 'function') {
+      opts = fetchCB;
+      fetchCB = null
+    }
+    if(!fetchCB) fetchCB = this.fetchAndParse;
+    
+    var uri, doc;
+    if(typeof uriOrDoc === 'string') {
+      uri = uriOrDoc;
+    } else {
+      doc = uriOrDoc;
+    }
+    var i, part, uri;
+    for(i=0; i < this.parts.length - 1; i++) {
+      doc = await fetchCB(uri);
+      uri = this.resolveURI(i, doc, opts);
+    }
+
+    doc = await fetchCB(uri);
+    return this.resolve(doc, opts);
+  }
+  
 }
 
 module.exports = CFI;
