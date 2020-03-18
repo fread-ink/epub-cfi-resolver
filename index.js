@@ -249,16 +249,47 @@ class CFI {
       return cfi.get();
     }
   }
-  
-  static compare(a, b, uriCompFunc) {
-    // TODO implement a way to resolve URIs to the final URI
-    // and compare them using uriCompFunc
-  }
 
+
+  // Takes two CFI paths and compares them
+  static comparePath(a, b) {
+    const max = Math.max(a.length, b.length);
+    
+    var i, cA, cB, diff;
+    for(i=0; i < max; i++) {
+      cA = a[i];
+      cB = b[i];
+      if(!cA) return -1;
+      if(!cB) return 1;
+
+      diff = this.compareParts(cA, cB);
+      if(diff) return diff;
+    }
+    return 0;
+  }
+  
+  // Takes two CFI objects and compares them.
+  static compare(a, b) {
+    var oA = a.get();
+    var oB = b.get();
+    if(a.isRange || b.isRange) {
+      if(a.isRange && b.isRange) {
+        var diff = this.comparePath(oA.from, oB.from);
+        if(diff) return diff;
+        return this.comparePath(oA.to, oB.to);
+      }
+      if(a.isRange) oA = oA.from;
+      if(b.isRange) oB = oB.from;
+
+      return this.comparePath(oA, oB);
+      
+    } else { // neither a nor b is a range
+      
+      return this.comparePath(oA, oB);
+    }
+  }
+  
   // Takes two parsed path parts (assuming path is split on '!') and compares them.
-  // If `a` comes first in the document then a value < 0 is returned
-  // If `b` comes first in the document then a value > 0 is returned
-  // If they are equal then 0 is returned
   static compareParts(a, b) {
     const max = Math.max(a.length, b.length);
     
@@ -292,11 +323,10 @@ class CFI {
         diff = compareSpatial(cA.spatial, cB.spatial);
         if(diff) return diff;
         
-      } else { // only compare offsets for text nodes
-
-        diff = (cA.offset || 0) - (cB.offset || 0);
-        if(diff) return diff;
       }
+
+      diff = (cA.offset || 0) - (cB.offset || 0);
+      if(diff) return diff;
     }
     return 0;
   }

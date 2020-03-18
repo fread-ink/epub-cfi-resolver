@@ -215,22 +215,35 @@ If `fetchCB` is not supplied, then a built in function will be used which relies
 
 Static function to generate a CFI string for a `node` reference and optional `offset` into a text node. The offset will be adjusted to conform to the CFI specification if needed. If present the `extra` string will be appended at the end of the CFI before the closing bracket.
 
-## CFI.compareParts(a, b)
+## CFI.compare(a, b)
 
-Static function that takes two parsed path parts and compares them, e.g:
+Static function that compares two CFI objects, e.g:
 
 ```
-const a = new CFI("epubcfi(/1/4/4~5)").get()[0];
-const b = new CFI("epubcfi(/1/2/4~2.3)").get()[0];
+const a = new CFI("epubcfi(/2/4!/6)");
+const b = new CFI("epubcfi(/2/4!/7)");
 
-const diff = CFI.compareParts(a, b);
+const diff = CFI.compare(a, b);
 ```
 
 * If `a` comes first in the document then a value < 0 is returned
 * If `b` comes first in the document then a value > 0 is returned
 * If they are equal then 0 is returned
 
-If either CFI is a range only the beginning of the range is used for comparison.
+If only one CFI is a range only the beginning of the range is used for comparison. If both CFIs are ranges then first the beginnings are compared and if they are equal then the ends are compared.
+
+## CFI.compareParts(a, b)
+
+Static function that takes two parsed path parts and compares them, e.g:
+
+```
+const a = new CFI("epubcfi(/2/4/4~5)").get()[0];
+const b = new CFI("epubcfi(/2/2/4~2.3)").get()[0];
+
+const diff = CFI.compareParts(a, b);
+```
+
+Return values same as for `CFI.compare()`
 
 # Example
 
@@ -314,8 +327,6 @@ which is useful for specifying highlighted text in an ebook.
 
 # ToDo
 
-* Finish implementing compare/sort
-* Unit tests for compare
 * More unit tests for generator
 * Unit tests for bad data / stuff that should fail
 
