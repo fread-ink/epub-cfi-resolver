@@ -51,7 +51,8 @@ function closest(a, n) {
 // Given a set of nodes that are all children
 // and a reference to one of those nodes
 // calculate the count/index of the node
-// according to the CFI spec
+// according to the CFI spec.
+// Also re-calculate offset if supplied and relevant
 function calcSiblingCount(nodes, n, offset) {
   var count = 0;
   var lastWasElement;
@@ -69,7 +70,11 @@ function calcSiblingCount(nodes, n, offset) {
       }
       
       if(n === node) {
-        return {count};
+        if(node.tagName.toLowerCase() === 'img') {
+          return {count, offset};
+        } else {
+          return {count};
+        }
       }
       prevOffset = 0;
       lastWasElement = true;
@@ -554,6 +559,8 @@ class CFI {
   }
 
   // The CFI counts child nodes differently from the DOM
+  // Retrive the child of parentNode at the specified index
+  // according to the CFI standard way of counting
   getChildNodeByCFIIndex(dom, parentNode, index, offset) {
     const children = parentNode.childNodes;
     if(!children.length) return {node: parentNode, offset: 0};
@@ -579,11 +586,18 @@ class CFI {
         if(cfiCount % 2 === 0) {
           cfiCount += 2;
           if(cfiCount >= index) {
+            if(child.tagName.toLowerCase() === 'img' && offset) {
+              return {node: child, offset}
+            }
             return {node: child, offset: 0}
           }
         } else { // Previous node was a text node
           cfiCount += 1;
           if(cfiCount === index) {
+            if(child.tagName.toLowerCase() === 'img' && offset) {
+              return {node: child, offset}
+            }
+              
             return {node: child, offset: 0}
 
             // This happens when offset into the previous text node was greater

@@ -273,6 +273,7 @@ The `!` marks the beginning of a new document so this CFI tells us to go to the 
 * Implement :offset for <img alt="text"> elements
 * If encountering offset, spatial or temporal after already having seen one of those, stop parsing
 * If not last subpart, disregard offset, spatial, temporal, sideBias and text location assertion
+* Implement .resolveFinalURI with a callback for fetching and parsing each file
 * Finish implementing compare/sort
 * Unit tests for compare
 * More unit tests for generator
