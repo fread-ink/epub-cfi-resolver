@@ -276,7 +276,11 @@ The resolver only finds the relevant node, corrects the offset if necessary and 
 
 # About EPUB-CFI
 
-A [CFI](http://idpf.org/epub/linking/cfi/epub-cfi.html), or Canonical Fragment Identifier, is like a more complicated `#anchor` as used in HTML `href=` attributes. Think of them as ebook bookmarks.
+A [CFI](http://idpf.org/epub/linking/cfi/epub-cfi.html), or Canonical Fragment Identifier, is like a more complicated `#anchor` as used in HTML `href=` attributes. Think of them as ebook bookmarks. You'd encounter them like so:
+
+```
+<a href="some/uri#epubcfi(/6/7:42)">a link</a>
+```
 
 CFIs allow specifying a precise location or range inside any XML/XHTML/HTML document by specifying how to traverse the document tree, e.g:
 
@@ -295,10 +299,18 @@ This lets us know that the `id=` of the 6th child is "foo" and the text at the 4
 Additionally, CFIs can traverse multiple documents, e.g:
 
 ```
-epubcfi(/1/2!/6[foo]/7:42[don't panic])
+epubcfi(/2/4!/6[foo]/7:42[don't panic])
 ```
 
 The `!` marks the beginning of a new document so this CFI tells us to go to the 2nd child node of the 1st child node of the current document, then look for an attribute in that node that references another document (e.g. `href=`) and continue resolving the rest of the CFI in the referenced document.
+
+CFIs can specify ranges using commas:
+
+```
+epubcfi(<common base path>,<from>,<to>)
+```
+
+which is useful for specifying highlighted text in an ebook.
 
 # ToDo
 
