@@ -413,6 +413,23 @@ var tests = [
         }
       ]
     ]
+  }, { // Test that parser ignores vender extensions
+    cfi: "epubcfi(/2/4vnd.foo/6foo.bar:20)",
+    parsed: [
+      [
+        {
+          "nodeIndex": 2
+        },
+        {
+          "nodeIndex": 4
+        },
+        {
+          "nodeIndex": 6,
+          "offset": 20
+        }
+      ]
+    ]
+
   }
 ];
 
