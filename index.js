@@ -996,22 +996,18 @@ class CFI {
     });
   }
   
-  // Resolve an entire CFI
-  // uriOrDoc is the initial URI or Document/XMLDocument object
-  // where parsing should begin.
-  //
-  // fetchCB is an optional async function that takes a URI as its sole argument,
-  // retrieves the HTML/XHTML/XML at that URI, parses it into a
-  // Document/XMLDocument object and returns it.
-  //
-  // If fetchCB is not supplied, then this.fetchAndParse will be used,
-  // which relies on XMLHTTPRequest
+
   async resolveAll(uriOrDoc, fetchCB, opts) {
     if(typeof fetchCB !== 'function') {
       opts = fetchCB;
       fetchCB = null
     }
-    if(!fetchCB) fetchCB = this.fetchAndParse;
+    if(!fetchCB) {
+      if(typeof XMLHttpRequest === 'undefined') {
+        throw new Error("XMLHttpRequest not available. You must supply a function as the second argument.");
+      }
+      fetchCB = this.fetchAndParse;
+    }
     
     var uri, doc;
     if(typeof uriOrDoc === 'string') {

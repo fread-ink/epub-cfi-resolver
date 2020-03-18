@@ -207,9 +207,9 @@ Resolve an entire CFI, fetching and parsing URIs as they are encountered. If suc
 
 `uriOrDoc` is the initial URI or Document/XMLDocument object where parsing should begin.
 
-`fetchCB` is an optional async function that takes a URI as its sole argument, retrieves the HTML/XHTML/XML at that URI, parses it into a Document/XMLDocument object and returns it.
+`fetchCB` is an optional async function that takes a URI as its sole argument, retrieves the HTML/XHTML/XML at that URI, parses it into a Document/XMLDocument object and returns it. 
 
-If `fetchCB` is not supplied, then a built in function will be used which relies on XMLHTTPRequest.
+If `fetchCB` is not supplied, then a built in function will be used which relies on XMLHttpRequest. Note that this will not work if XMLHttpRequest is not available (e.g. in node.js) and instead an exception will be thrown.
 
 ## CFI.generate(node, offset, extra)
 
@@ -337,7 +337,7 @@ which is useful for specifying highlighted text in an ebook.
 Pros of using this project over readium-cfi-js:
 
 * ~27 kB vs. ~400 kB dist file (both numbers are for un-minified js)
-* Documented usage and example code vs. no documentation on usage
+* Documented API and example code vs. no API nor usage docs
 * No dependencies vs. depends on jquery and lodash
 * Works with node.js vs. requires browser
 
