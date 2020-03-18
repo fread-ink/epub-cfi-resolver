@@ -8,46 +8,23 @@ To install:
 npm install epub-cfi-resolver
 ```
 
-Remember to unescape the URI first, then:
+Remember to unescape the CFI string first, then:
 
 ```
 var CFI = require('epub-cfi-resolver');
 
-// parsing
-var cfi = new CFI('epubcfi(/1/2!/1/2/3:4)', {
-  flattenRange: false // default is false
-}); 
-console.log(cfi.get()); // print parsed data
-```
+var testCFI = "epubcfi(/6/4[chap01ref]!/4[body01]/10[para05]/3:5)";
 
-To resolve the CFI, assuming `doc` contains a `Document` or `XMLDocument` object for the starting document:
+// Parse the CFI
+cfi = new CFI(testCFI);
 
-```
-// Use first part of CFI to resolve URI for the second part
-var uri = cfi.resolveURI(0, doc);
+// Resolve the CFI
+var bookmark = await cfi.resolve('test.xml');
 
-// Call some function to fetch document for second part of CFI
-var data = fetch(uri);
-
-// Parse fetched data
-var parser = new DOMParser();
-var doc2 = parser.parseFromString(data, 'text/html');
-
-// Note: It is recommended to use XMLHTTPRequest
-// rather than the fetch API as XMLHTTPRequest
-// will fetch _and_ parse the data in one go.
-// This lets the browser handle mimetype detection
-// which is otherwise difficult.
-
-// Resolve final part of CFI to a bookmark
-var bookmark = cfi.resolve(doc2, {
-  range: false // default is false
-});
-
-// bookmark contains:
+// bookmark now contains:
 {
-  node: <reference to html node in doc2>,
-  offset: 4
+  node: <reference to Node>,
+  offset: 5 // integer offset into text
 }
 ```
 
@@ -162,7 +139,7 @@ Locate the node referenced by the specified part of the CFI where `index` refers
 
 If the node pointed to by the specified part of the CFI refers to a URI in one of the ways allowed by the EPUB-CFI standard then that URI will be returned. If no URI is found then an error is thrown.
 
-## .resolve(doc, opts)
+## .resolveLast(doc, opts)
 
 Assuming that `doc` is a `Document` or `XMLDocument` object for the URI referenced by the last part of the CFI (e.g. for `/2!/4!/6` the last part is `/6), return an object referencing the node (or an 
 
@@ -201,9 +178,9 @@ If the CFI is a range then the output will be:
 
 unless the option `range: true` is given, in which case the output will be a proper [Range](https://developer.mozilla.org/en-US/docs/Web/API/Range) object.
 
-## async .resolveAll(uriOrDoc, [fetchCB], [opts])
+## async .resolve(uriOrDoc, [fetchCB], [opts])
 
-Resolve an entire CFI, fetching and parsing URIs as they are encountered. If successful returns an object as documented for the `.resolve()` API call.
+Resolve an entire CFI, fetching and parsing URIs as they are encountered. If successful returns an object as documented for the `.resolveLast()` API call.
 
 `uriOrDoc` is the initial URI or Document/XMLDocument object where parsing should begin.
 
@@ -361,7 +338,9 @@ Just from a quick glance at the code it's clear that this implementation will fa
 
 # License and copyright
 
-* License: AGPLv3
 * Copyright 2020 Marc Juul Christoffersen 
+* License: AGPLv3
+
+See the `LICENSE` file for full license.
 
 

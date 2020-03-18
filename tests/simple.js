@@ -468,7 +468,7 @@ tape('Simple tests', function(t) {
       
       if(test.resolved) {
 
-        bookmark = cfi.resolve(htmlDOM, test.opts);
+        bookmark = cfi.resolveLast(htmlDOM, test.opts);
         if(bookmark.isRange) {
           bookmark.from.node = bookmark.from.node.outerHTML || bookmark.from.node.textContent;
           bookmark.to.node = bookmark.to.node.outerHTML || bookmark.to.node.textContent;

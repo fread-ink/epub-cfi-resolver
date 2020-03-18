@@ -55,7 +55,7 @@ console.log("uri:", uri);
 
 var chap1DOM = parseDOM(docs.html, 'application/xhtml+xml');
 
-var bookmark = cfi.resolve(chap1DOM, {
+var bookmark = cfi.resolveLast(chap1DOM, {
   ignoreIDs: true
 });
 
@@ -68,7 +68,7 @@ console.log("Generated:", c);
 
 cfi = new CFI(c);
 
-bookmark = cfi.resolve(chap1DOM, {
+bookmark = cfi.resolveLast(chap1DOM, {
   ignoreIDs: true
 });
 
@@ -85,7 +85,7 @@ async function testAutomaticParsing() {
   
   cfi = new CFI(testCFI);
 
-  var loc = await cfi.resolveAll('test.opf');
+  var loc = await cfi.resolve('test.opf');
   
   console.log("Resolved:", loc, loc.node, loc.node.textContent);
 

@@ -953,7 +953,7 @@ class CFI {
   // Takes the Document or XMLDocument for the final
   // document referenced by the CFI
   // and returns the node and offset into that node
-  resolve(dom, opts) {
+  resolveLast(dom, opts) {
     opts = Object.assign({
       range: false
     }, opts || {});
@@ -993,7 +993,7 @@ class CFI {
   }
 
   async fetchAndParse(uri) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolv, reject) => {
       
       const xhr = new XMLHttpRequest;
       
@@ -1005,8 +1005,8 @@ class CFI {
           if(xhr.status < 200 || xhr.status >= 300) {
             reject(new Error("Failed to get: " + uri));
             return;
-        }
-          resolve(xhr.responseXML);
+          }
+          resolv(xhr.responseXML);
         }
       }
       xhr.onerror = function() {
@@ -1017,8 +1017,7 @@ class CFI {
     });
   }
   
-
-  async resolveAll(uriOrDoc, fetchCB, opts) {
+  async resolve(uriOrDoc, fetchCB, opts) {
     if(typeof fetchCB !== 'function') {
       opts = fetchCB;
       fetchCB = null
@@ -1043,7 +1042,7 @@ class CFI {
     }
 
     doc = await fetchCB(uri);
-    return this.resolve(doc, opts);
+    return this.resolveLast(doc, opts);
   }
   
 }

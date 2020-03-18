@@ -34,12 +34,12 @@ function generateAndCompare(t, dom, node, offset, cfi) {
          
   var cfi = new CFI(c);
   
-  var bookmark = cfi.resolve(dom);
+  var bookmark = cfi.resolveLast(dom);
 
   t.equal(bookmark.node, node);
   t.equal(bookmark.offset, offset);
   
-  bookmark = cfi.resolve(dom, {
+  bookmark = cfi.resolveLast(dom, {
     ignoreIDs: true
   });
 

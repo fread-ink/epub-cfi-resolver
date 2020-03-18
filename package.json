@@ -1,6 +1,6 @@
 {
   "name": "epub-cfi-resolver",
-  "version": "0.0.12",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/fread-ink/epub-cfi-resolver.git"
