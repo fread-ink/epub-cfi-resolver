@@ -8,7 +8,7 @@ To install:
 npm install epub-cfi-resolver
 ```
 
-Remember to unescape the CFI string first, then:
+Then:
 
 ```
 var CFI = require('epub-cfi-resolver');
@@ -242,7 +242,7 @@ To build the example:
 npm run build
 ```
 
-Then open `example/example.html` in a browser.
+Then open `example/example.html` in a browser. It should be loaded through a web server, not from the filesystem.
 
 # Using with node.js
 
@@ -280,13 +280,15 @@ CFIs allow specifying a precise location or range inside any XML/XHTML/HTML docu
 epubcfi(/6/7:42)
 ```
 
-The above CFI specifies the 42nd character of the 7th child node of the 6th child node of the root node. These can be embellished with additional info e.g:
+The above CFI specifies the 42nd character of the 7th child node of the 6th child node of the root node. It's important to note that CFI doesn't count nodes in the same way as the DOM standard: Elements always have even numbers, Text and CDATA nodes always have odd numbers, adjacent text/CDATA nodes are combined and have the same number, two adjacent elements are assumed to have a text node of zero length between them and the node index 0 means "before the first node".
+
+The above CFI can be embellished with additional info e.g:
 
 ```
 epubcfi(/6[foo]/7:42[don't panic])
 ```
 
-This lets us know that the `id=` of the 6th child is "foo" and the text at the 42nd character is "don't panic".
+This lets us know that the `id=` of the 6th child node is "foo" and the text at the 42nd character is "don't panic".
 
 Additionally, CFIs can traverse multiple documents, e.g:
 
@@ -294,7 +296,7 @@ Additionally, CFIs can traverse multiple documents, e.g:
 epubcfi(/2/4!/6[foo]/7:42[don't panic])
 ```
 
-The `!` marks the beginning of a new document so this CFI tells us to go to the 2nd child node of the 1st child node of the current document, then look for an attribute in that node that references another document (e.g. `href=`) and continue resolving the rest of the CFI in the referenced document.
+The `!` marks the beginning of a new document so this CFI tells us to go to the 2nd child node of the 4th child node of the current document, then look for an attribute in that node that references another document (e.g. `href=`) and continue resolving the rest of the CFI in the referenced document.
 
 CFIs can specify ranges using commas:
 
