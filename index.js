@@ -1037,11 +1037,11 @@ class CFI {
     }
     var i, part, uri;
     for(i=0; i < this.parts.length - 1; i++) {
-      doc = await fetchCB(uri);
+      if(uri) doc = await fetchCB(uri);
       uri = this.resolveURI(i, doc, opts);
     }
 
-    doc = await fetchCB(uri);
+    if(uri) doc = await fetchCB(uri);
     return this.resolveLast(doc, opts);
   }
   
