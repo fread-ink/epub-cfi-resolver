@@ -67,10 +67,10 @@ tape('Generator', function(t) {
   
   generateAndCompare(t, badDOM, node, 1, cfiStr);
   
-  cfiStr = 'epubcfi(/2/4/6[chapter01]!/2/4[body01]/16[svgimg]:1)';
+  cfiStr = 'epubcfi(/6/4[chap01ref]!/2/4[body01]/16[svgimg]:1)';
   var cfi = new CFI(cfiStr);
   var a = [
-    { node: opfDOM.getElementById('chapter01')},
+    { node: opfDOM.getElementById('chap01ref')},
     { node: htmlDOM.getElementById('svgimg'), offset: 1}
   ];
   var c = CFI.generate(a);
