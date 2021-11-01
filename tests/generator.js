@@ -51,7 +51,7 @@ tape('Generator', function(t) {
 
   t.plan(16);
 
-  var cfiStr = 'epubcfi(/2/4[body01]/10[para05]/3:5)';
+  var cfiStr = 'epubcfi(/4[body01]/10[para05]/3:5)';
   
   var node = htmlDOM.querySelector('#para05').lastChild;
   
@@ -61,13 +61,13 @@ tape('Generator', function(t) {
   
   generateAndCompare(t, nwHtmlDOM, node, 5, cfiStr)
 
-  cfiStr = 'epubcfi(/2/4/2[!/^[^]^,^;]/2/4[!/foo^^^[^]]/1:10)';
+  cfiStr = 'epubcfi(/4/2[!/^[^]^,^;]/2/4[!/foo^^^[^]]/1:10)';
 
   node = badDOM.getElementById('!/foo^[]').lastChild;
   
   generateAndCompare(t, badDOM, node, 1, cfiStr);
   
-  cfiStr = 'epubcfi(/6/4[chap01ref]!/2/4[body01]/16[svgimg]:1)';
+  cfiStr = 'epubcfi(/6/4[chap01ref]!/4[body01]/16[svgimg]:1)';
   var cfi = new CFI(cfiStr);
   var a = [
     { node: opfDOM.getElementById('chap01ref')},
