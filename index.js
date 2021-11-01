@@ -226,22 +226,14 @@ class CFI {
     var cfi = '';
     var o;
 
-    // The leading path of CFI corresponding to the 'spine' element must be relative 
-    // to the ancestor 'package' element. If this is a spine child element, we need
-    // to stop traversing when we reach the 'package' node.  
-    var isSpineElement = node.parentNode.nodeName === 'spine' ? true : false;
-
-    while(node.parentNode) {
+    // EPUB CDI does not include the root elements 'package' (for the opf) or 'html' for html
+    while(node.parentNode && node.nodeName !== 'package' && node.nodeName !== 'html') {
       o = calcSiblingCount(node.parentNode.childNodes, node, offset);
       if(!cfi && o.offset) cfi = ':'+o.offset;
       
       cfi = '/'+o.count+((node.id) ? '['+cfiEscape(node.id)+']' : '') + cfi;
       
       node = node.parentNode;
-
-      if(isSpineElement && node.nodeName === 'package'){
-        break;
-      }
     }
     
     return cfi;
